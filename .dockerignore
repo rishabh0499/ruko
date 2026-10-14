@@ -1,0 +1,7 @@
+.env
+store
+test
+docs
+*.gif
+node_modules
+.git

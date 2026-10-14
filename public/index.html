@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ruko</title>
+<meta name="description" content="Ruko stops digital-arrest scams at the moment of payment and builds the case file when money still leaves.">
+<meta name="theme-color" content="#0a0e16">
+<script>try{var t=localStorage.getItem("ruko_theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2314161b'/><rect y='27' width='32' height='5' fill='%23f5a524'/><path d='M16 6.5c-2 1.7-4.6 2.9-7 2.9v6.1c0 5.2 3.6 8 7 9.2 3.4-1.2 7-4 7-9.2V9.4c-2.4 0-5-1.2-7-2.9z' fill='none' stroke='white' stroke-width='2'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Devanagari:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@400;600&family=Noto+Serif+Devanagari:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<a class="skip" href="#view">Skip to content</a>
+<div class="app">
+  <aside class="rail" aria-label="Main navigation">
+    <a class="brand" href="#/" aria-label="Ruko home"><div class="brand-mark" data-icon="shield"></div><div><div class="brand-name">Ruko</div><div class="brand-sub">Stop · Freeze · Return</div></div></a>
+    <nav class="nav" id="nav">
+      <div class="nav-group">Customer</div>
+      <a href="#/" data-r="hub"><span data-icon="home"></span><span data-i="nav_hub">Demo Hub</span></a>
+      <a href="#/bank" data-r="bank"><span data-icon="bank"></span><span data-i="nav_bank">Bharat Bank + Ruko</span></a>
+      <a href="#/case" data-r="case"><span data-icon="file"></span><span data-i="nav_rp">ReturnPath</span></a>
+      <a href="#/scamcheck" data-r="scamcheck"><span data-icon="search"></span><span data-i="nav_check">Scam Check</span></a>
+      <div class="nav-group">Bank &amp; police</div>
+      <a href="#/desk" data-r="desk"><span data-icon="desk"></span>Fraud Desk</a>
+      <a href="#/officer" data-r="officer"><span data-icon="badge"></span>Officer View</a>
+      <div class="nav-group">For judges</div>
+      <a href="#/eval" data-r="eval"><span data-icon="chart"></span>Evaluation</a>
+      <a href="#/studio" data-r="studio"><span data-icon="flask"></span>Evidence Studio</a>
+      <a href="#/real" data-r="real"><span data-icon="scale"></span>Real vs Mocked</a>
+      <div class="nav-group">Platform</div>
+      <a href="#/security" data-r="security"><span data-icon="shield"></span>Security · IDS/IPS</a>
+    </nav>
+    <div class="rail-foot">
+      <button class="btn primary" id="tourBtn" type="button"><span data-icon="play"></span>Take the tour</button>
+      <button class="btn ghost sm" id="palBtn" type="button" style="justify-content:space-between"><span class="row" style="gap:8px"><span data-icon="command"></span>Jump to…</span><span class="kbd">⌘K</span></button>
+      <div class="rail-note">All people, accounts and documents in this demo are synthetic. Bharat Bank is fictional.</div>
+    </div>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <div class="crumb" id="crumb">Ruko</div>
+      <span class="ai-chip" id="aiPill" role="status" aria-live="polite">…</span>
+      <div class="seg" role="group" aria-label="Language"><button type="button" data-lang="en">English</button><button type="button" data-lang="hi">हिंदी</button></div>
+      <button class="btn sm ghost icon-only" id="soundBtn" type="button" aria-label="Sound"><span data-icon="volume"></span></button>
+      <div class="seg theme-seg" role="radiogroup" aria-label="Theme"><button type="button" role="radio" data-theme-opt="light" title="Light theme"><span data-icon="sun"></span><span class="lbl">Light</span></button><button type="button" role="radio" data-theme-opt="dark" title="Dark theme"><span data-icon="moon"></span><span class="lbl">Dark</span></button><button type="button" role="radio" data-theme-opt="system" title="Follow system setting"><span data-icon="monitor"></span><span class="lbl">Auto</span></button></div>
+    </header>
+    <main class="content" id="view" tabindex="-1"></main>
+  </div>
+</div>
+<script type="module" src="/js/main.js"></script>
+</body>
+</html>
