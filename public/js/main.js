@@ -24,10 +24,10 @@ const META = {
 
 export const app = { config: null, current: null, cleanup: null };
 
-// Routing: URL hash on localhost / Cloud Run. Inside a Claude artifact the host does not pass
-// "#/path" hashes through to the page, so the shareable build keeps the route in memory and
-// handles in-app "#/…" links itself.
-const STATIC = !!window.RUKO_STATIC;
+// Routing: URL hash on localhost and Firebase. Inside a Claude artifact the host does not pass
+// "#/path" hashes through to the page, so that build keeps the route in memory and handles
+// in-app "#/…" links itself.
+const STATIC = !!window.RUKO_ARTIFACT;
 let memHash = '#/';
 export const currentHash = () => (STATIC ? memHash : location.hash || '#/');
 

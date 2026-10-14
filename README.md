@@ -8,7 +8,7 @@ Google Cloud AI Builder Cup 2026 · BFSI track (Intelligent Risk, Fraud & Financ
 
 - **Code:** https://github.com/rishabh0499/ruko
 - **Shareable offline demo (runs in the browser):** https://claude.ai/artifact/QGABf7pm3vQnE3u17XWSFy
-- **Live Gemini version:** run locally (below) or on Cloud Run (`docs/DEPLOY.md`)
+- **Live app (Gemini, Firebase Hosting):** https://ruko-ai.web.app
 
 One **Case** object, three moments:
 
@@ -146,7 +146,7 @@ test/                   node:test unit tests
 
 ## Deploy
 
-See `docs/DEPLOY.md` (GitHub + Cloud Run, Hinglish) and `docs/VIDEO_SCRIPT.md` (3-minute video). `Dockerfile` and `deploy.sh` are ready; the API key goes in Secret Manager, never in the repo.
+The live site is a static build on Firebase Hosting (free Spark plan): `node scripts/build-static.mjs web && node scripts/deploy-firebase.mjs`. The whole app runs in the browser and calls Gemini directly, with a key restricted to the site's domains and the Generative Language API. A Cloud Run path (`Dockerfile`, `deploy.sh`) is also ready for the Node server. See `docs/DEPLOY.md` (Hinglish) and `docs/VIDEO_SCRIPT.md` (3-minute video).
 
 ## Safety notes
 

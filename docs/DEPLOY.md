@@ -10,7 +10,16 @@ git branch -M main && git push -u origin main
 ```
 `.env` (API key) `.gitignore` mein hai, isliye commit nahi hoga. Push se pehle `git status` mein check kar lena ki `.env` list mein nahi hai.
 
-## 2. Cloud Run (asia-south1)
+## 2. Firebase Hosting (abhi yahi live hai, free Spark plan)
+Live: https://ruko-ai.web.app
+```bash
+node scripts/build-static.mjs web      # dist-web/ banata hai, .env ka WEB_GEMINI_API_KEY andar daalta hai
+node scripts/deploy-firebase.mjs       # gcloud login token se Hosting REST API pe deploy
+```
+- Key public site mein jaati hai, isliye Google Cloud console mein usko restrict karna zaroori hai: website `https://ruko-ai.web.app/*` aur `https://ruko-ai.firebaseapp.com/*`, API sirf Generative Language API.
+- `dist-web/` gitignored hai; kabhi commit mat karna.
+
+## 2b. Cloud Run (optional, billing chahiye)
 1. gcloud install karo: https://cloud.google.com/sdk/docs/install
 2. Login aur project:
    ```bash
@@ -26,8 +35,8 @@ Notes:
 - Free-tier Gemini key pe Pro models ki quota 0 hai aur Flash ki limits kam hain. Judging ke dauran rate-limit se bachne ke liye AI Studio project pe billing on karna best hai. Phir `GEMINI_MODEL_PRO` mein `gemini-pro-latest` daal sakte ho.
 
 ## 3. Submission (18 Oct, target 16 Oct)
-- [ ] Deployed link (Cloud Run URL)
-- [ ] Public GitHub repo
+- [x] Deployed link: https://ruko-ai.web.app
+- [x] Public GitHub repo: https://github.com/rishabh0499/ruko
 - [ ] 3-minute video (YouTube, unlisted chalega). Script: `docs/VIDEO_SCRIPT.md`
 - [ ] Deck PDF
 - [ ] Category: BFSI — Intelligent Risk, Fraud & Financial Experiences
