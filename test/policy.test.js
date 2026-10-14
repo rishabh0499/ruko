@@ -91,3 +91,19 @@ test('quote check: whitespace/punctuation differences pass, Ruko\'s own words an
   assert.equal(sig.secrecyDemanded.value, false);
   assert.equal(sig.videoCallOngoing.value, false);
 });
+
+test('override is idempotent: a second "send anyway" adds no audit entry or SMS', async () => {
+  const { createApp } = await import('../lib/app.js');
+  const { SCENARIOS, repliesFor } = await import('../data/scenarios.js');
+  let db = null;
+  const app = createApp({ loadDb: () => db, saveDb: (d) => { db = d; }, putEvidence() {}, getEvidenceDataUrl: () => '', getEvidenceBytes: () => null, evidenceUrl: () => '', deleteEvidence() {}, synth: async () => null, prewarm: () => 0, voices: {} });
+  const call = async (m, p, b) => (await app.handle({ ip: '127.0.0.1', method: m, path: p, rawUrl: p, headers: {} }, b || {})).json;
+  let c = await call('POST', '/api/cases', { scenarioId: 'A', language: 'en' });
+  c = await call('POST', `/api/cases/${c.id}/pay`, { payment: SCENARIOS.A.payment });
+  for (const r of repliesFor(SCENARIOS.A, 'en')) { if (c.interview.done) break; c = await call('POST', `/api/cases/${c.id}/turn`, { text: r.text, latencyMs: 3000 }); }
+  assert.ok(c.hold, 'scenario A should be held');
+  const once = await call('POST', `/api/cases/${c.id}/override`);
+  const twice = await call('POST', `/api/cases/${c.id}/override`);
+  assert.equal(twice.audit.length, once.audit.length);
+  assert.equal(twice.notifications.length, once.notifications.length);
+});

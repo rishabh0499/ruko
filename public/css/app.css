@@ -508,3 +508,15 @@ table.t tr.click:hover td { background: var(--surface-2); }
   .rail, .topbar, .no-print, .stepper { display: none !important; }
   .app { display: block; } .content { padding: 0; } .doc { border: 0; max-height: none; box-shadow: none; background-image: none; }
 }
+
+/* ---------- officer view ---------- */
+.officer-kpis { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.officer-grid { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 18px; }
+.journey { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.journey span { font-size: var(--fs-xs); padding: 2px 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); white-space: nowrap; }
+.journey i { display: inline-flex; color: var(--faint); }
+.timeline { list-style: none; margin: 12px 0 0; padding: 0 0 0 14px; border-left: 2px solid var(--border); }
+.timeline li { position: relative; padding: 0 0 12px 8px; }
+.timeline li::before { content: ""; position: absolute; left: -20px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); }
+@media (max-width: 1100px) { .officer-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } .officer-kpis > div:nth-child(4) { border-left: 0; } .officer-grid { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .officer-kpis { grid-template-columns: 1fr; } .officer-kpis > div + div { border-left: 0; border-top: 1px solid var(--border); } }
