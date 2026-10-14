@@ -6,6 +6,10 @@ Google Cloud AI Builder Cup 2026 · BFSI track (Intelligent Risk, Fraud & Financ
 
 > India wins the detection race, loses the restitution race, and never runs the prevention race at the moment of payment.
 
+- **Code:** https://github.com/rishabh0499/ruko
+- **Shareable offline demo (runs in the browser):** https://claude.ai/artifact/QGABf7pm3vQnE3u17XWSFy
+- **Live Gemini version:** run locally (below) or on Cloud Run (`docs/DEPLOY.md`)
+
 One **Case** object, three moments:
 
 | Moment | What happens |
