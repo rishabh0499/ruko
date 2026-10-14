@@ -18,12 +18,13 @@ export async function render(el) {
   const drawIv = (r) => {
     runs.unshift(r); runs.length = Math.min(runs.length, 5);
     const m = r.metrics;
-    const md = `| Metric | Value |\n|---|---|\n| Scam catch rate | ${pct(m.catchRate)} |\n| False-hold rate | ${pct(m.falseHoldRate)} |\n| Median seconds to decision (simulated) | ${m.medianSecondsToDecision} |\n| Median turns | ${m.medianTurns} |\n| Cost per intervention (INR, est.) | ₹${m.costPerInterventionINR.toFixed(3)} |\n| Red-team pass | ${m.redTeamPass} |\n\nEngine: ${r.engine} · ${r.at}`;
+    const md = `| Metric | Value |\n|---|---|\n| Scam catch rate | ${pct(m.catchRate)} |\n| False-hold rate | ${pct(m.falseHoldRate)} |\n| Median seconds to decision (simulated) | ${m.medianSecondsToDecision} |\n| Median turns | ${m.medianTurns} |\n| Ruko processing per turn, measured (s) | ${m.medianRukoSecondsPerTurn} |\n| Cost per intervention (INR, est.) | ₹${m.costPerInterventionINR.toFixed(3)} |\n| Red-team pass | ${m.redTeamPass} |\n\nEngine: ${r.engine} · ${r.at}`;
     $('#iv', el).innerHTML = `
-      <div class="grid g4" style="margin:6px 0 14px">
+      <div class="grid g3" style="margin:6px 0 14px">
         <div class="kpi"><div class="num" style="color:var(--ok)">${pct(m.catchRate)}</div><div class="lbl">Scam catch rate</div></div>
         <div class="kpi"><div class="num">${pct(m.falseHoldRate)}</div><div class="lbl">False-hold rate</div></div>
         <div class="kpi"><div class="num">${m.medianSecondsToDecision}s</div><div class="lbl">Median time to decision (simulated, ${m.medianTurns} turns)</div></div>
+        <div class="kpi"><div class="num">${m.medianRukoSecondsPerTurn == null ? '—' : m.medianRukoSecondsPerTurn < 0.1 ? '&lt;0.1' : m.medianRukoSecondsPerTurn}s</div><div class="lbl">Ruko processing per turn (measured, median)</div></div>
         <div class="kpi"><div class="num">₹${m.costPerInterventionINR.toFixed(2)}</div><div class="lbl">Model cost per intervention (est.)</div></div>
       </div>
       <div class="row small"><span class="pill">Engine: ${esc(r.engine)}</span><span class="pill">Red team ${esc(m.redTeamPass)}</span><button class="btn sm" id="md" type="button">Copy as Markdown</button><button class="btn sm" id="csv" type="button">Download CSV</button></div>

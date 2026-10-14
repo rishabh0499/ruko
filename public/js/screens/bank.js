@@ -1,4 +1,5 @@
 import { get, post } from '../api.js';
+import { dictate } from '../dictate.js';
 import { $, esc, inr, sleep, time, OUTCOME, outcomePill, mocked, toast, fileToDataUrl } from '../ui.js';
 import { t, tl, state } from '../i18n.js';
 import { go } from '../main.js';
@@ -249,14 +250,13 @@ export async function render(el, [caseId]) {
     if (ui.call.state === 'ended') { ui.tpView = 'sms'; drawTrust(); }
   }
   function listen() {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) return toast('Speech input needs Chrome');
-    const r = new SR(); r.lang = L() === 'hi' ? 'hi-IN' : 'en-IN'; r.interimResults = true;
-    const btn = $('#micBtn', bank); btn.classList.add('rec');
-    r.onresult = (e) => { $('#ans', bank).value = [...e.results].map((x) => x[0].transcript).join(' '); };
-    r.onend = () => btn.classList.remove('rec');
-    r.onerror = (e) => { btn.classList.remove('rec'); toast('Mic: ' + e.error); };
-    r.start();
+    const btn = $('#micBtn', bank);
+    dictate({
+      lang: L(), button: btn,
+      onState: (st) => { if (st === 'recording') toast(L() === 'hi' ? 'बोलिए… रुकने के लिए फिर से माइक दबाएँ' : 'Speak now… tap the mic again to stop'); if (st === 'transcribing') toast(L() === 'hi' ? 'Gemini लिख रहा है…' : 'Gemini is writing it down…'); },
+      onText: (text) => { const a = $('#ans', bank); if (a) { a.value = text; a.focus(); } },
+      onError: (m) => toast(m),
+    });
   }
 
   // ---------- Trusted phone ----------

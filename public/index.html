@@ -6,7 +6,7 @@
 <title>Ruko</title>
 <meta name="description" content="Ruko stops digital-arrest scams at the moment of payment and builds the case file when money still leaves.">
 <meta name="theme-color" content="#0a0e16">
-<script>try{var t=localStorage.getItem("ruko_theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
+<script>try{var t=localStorage.getItem("ruko_theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;if(localStorage.getItem("ruko_bigtext")==="1")document.documentElement.classList.add("big-text");}catch(e){}</script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2314161b'/><rect y='27' width='32' height='5' fill='%23f5a524'/><path d='M16 6.5c-2 1.7-4.6 2.9-7 2.9v6.1c0 5.2 3.6 8 7 9.2 3.4-1.2 7-4 7-9.2V9.4c-2.4 0-5-1.2-7-2.9z' fill='none' stroke='white' stroke-width='2'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -45,6 +45,7 @@
       <div class="crumb" id="crumb">Ruko</div>
       <span class="ai-chip" id="aiPill" role="status" aria-live="polite">…</span>
       <div class="seg" role="group" aria-label="Language"><button type="button" data-lang="en">English</button><button type="button" data-lang="hi">हिंदी</button></div>
+      <button class="btn sm ghost" id="textBtn" type="button" aria-pressed="false" title="Larger text (for older customers)" aria-label="Larger text" style="font-weight:700;min-width:40px">A+</button>
       <button class="btn sm ghost icon-only" id="soundBtn" type="button" aria-label="Sound"><span data-icon="volume"></span></button>
       <div class="seg theme-seg" role="radiogroup" aria-label="Theme"><button type="button" role="radio" data-theme-opt="light" title="Light theme"><span data-icon="sun"></span><span class="lbl">Light</span></button><button type="button" role="radio" data-theme-opt="dark" title="Dark theme"><span data-icon="moon"></span><span class="lbl">Dark</span></button><button type="button" role="radio" data-theme-opt="system" title="Follow system setting"><span data-icon="monitor"></span><span class="lbl">Auto</span></button></div>
     </header>

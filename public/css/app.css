@@ -520,3 +520,11 @@ table.t tr.click:hover td { background: var(--surface-2); }
 .timeline li::before { content: ""; position: absolute; left: -20px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); }
 @media (max-width: 1100px) { .officer-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } .officer-kpis > div:nth-child(4) { border-left: 0; } .officer-grid { grid-template-columns: 1fr; } }
 @media (max-width: 900px) { .officer-kpis { grid-template-columns: 1fr; } .officer-kpis > div + div { border-left: 0; border-top: 1px solid var(--border); } }
+
+/* ---------- larger text (A+) ---------- */
+html.big-text .content { zoom: 1.2; }
+#textBtn.on { background: var(--accent-soft); color: var(--accent-ink); border-color: var(--accent-line); }
+/* voice input states */
+.btn.rec { background: #b42318; color: #fff; border-color: #b42318; }
+.icon-btn.busy, .btn.busy { opacity: .6; pointer-events: none; cursor: progress; }
+@media (prefers-reduced-motion: reduce) { .icon-btn.rec { animation: none; } }

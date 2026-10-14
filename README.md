@@ -18,6 +18,27 @@ One **Case** object, three moments:
 | **Freeze** | If a coached victim overrides, everything is already captured. The 1930 / NCRP complaint is drafted inside the golden hour, with nothing retold. |
 | **Return** | The same cited case file becomes the bank dispute, the cyber-cell evidence annexure, a release application draft (for an advocate), and a plain-language summary. A second door serves the innocent account holder frozen because tainted money passed through. |
 
+## The problem, in verified numbers
+
+| Figure | Source |
+|---|---|
+| ₹22,495 crore reported lost to financial cyber fraud in 2025, across 24,02,579 NCRP complaints | MHA, Rajya Sabha unstarred question 1341, 11 Feb 2026 |
+| ₹55,649 crore reported 2021–2025; ₹8,189 crore held ("saved") by 1930 / CFCFRMS to 31 Dec 2025 | Same reply (yearly table and CFCFRMS figure) |
+| 1,23,672 digital-arrest complaints in 2024, ₹1,935.51 crore lost | MHA, Rajya Sabha written reply, 12 Mar 2025 |
+| 36,290 restorations worth ₹18.05 crore completed through the Money Restoration Module, 57 banks | Supreme Court, *In Re: Victims of Digital Arrest*, 2026 SCC OnLine SC 1532, 4 Aug 2026 |
+
+Reported amounts are what complainants state, not verified losses. The gap is the point: money is reported and often held, but very little goes back, and nothing in the current system talks to the customer before a coerced payment leaves.
+
+## Where Ruko fits India's 2026 framework
+
+| Moment | What exists | What Ruko adds |
+|---|---|---|
+| **Stop** | The Supreme Court (4 Aug 2026) directed RBI to adopt an SOP for temporary debit holds and a delayed-transaction safeguard. | The hold, decided by an interview with cited reasons, a trusted contact who can only advise, and a human way out within 24 hours. Fraud models miss digital-arrest payments because the customer authorises them; Ruko asks. |
+| **Freeze** | 1930 / CFCFRMS can hold money only when the complaint is fast and complete. | Everything is captured before an override, so the 1930 / NCRP complaint is drafted inside the golden hour without the victim retelling the story. |
+| **Return** | MHA's SOP of 2 Jan 2026; the Money Restoration Module and Grievance Redressal Module live from April 2026. MRM restores money that is already frozen; GRM handles wrongful freezes. | ReturnPath builds the cited case file those processes need (bank dispute, cyber-cell annexure, release papers), and Scenario C serves the account holder frozen by mistake. |
+
+Ruko works with these systems, not instead of them. Submission to 1930 / NCRP / MRM is drafted, never sent, in this prototype.
+
 ## Run it (localhost)
 
 Requirements: **Node.js 20+**. Nothing else: no `npm install`, no database.
@@ -106,11 +127,11 @@ On the live website the app runs in the browser, so the same engine inspects eve
 |---|---|
 | Trigger, interview flow, decider (code) | Bharat Bank (fictional) and its session signals |
 | Signal extraction (Gemini with quote checks, or rules offline) | Payee-risk list standing in for Chakshu / Suspect Registry |
-| Script matching over a 15-entry library | Trusted-contact SMS and call (shown on a simulated phone) |
+| Script matching over a 15-entry library: keywords plus Gemini embeddings | Trusted-contact SMS and call (shown on a simulated phone) |
 | Evidence reading with source boxes (Gemini; offline uses stored ground truth for samples) | 1930 / NCRP / bank submission (drafted, never submitted) |
 | Money trail, RBI working-day clocks, document validator | Officer view authentication |
 | Drafting into fixed templates | All people, accounts, documents and the eval set |
-| Scam Check | Voice is pre-recorded Gemini TTS lines, not a live two-way Gemini Live conversation (roadmap) |
+| Scam Check, voice input (Gemini transcription), semantic script matching (Gemini embeddings) | Ruko speaks pre-recorded Gemini TTS lines; a two-way Gemini Live conversation is roadmap |
 
 ## Architecture (local build)
 
@@ -130,6 +151,8 @@ Production path: Firebase Hosting front end; Cloud Run API in asia-south1 (min i
 ## Evaluation
 
 Run it on the **Evaluation** page. Offline rules on the team-written set: 20/20 scams stopped, 0/20 legitimate transfers held, 4/4 red-team cases. That set was written by the team from public advisories and news reports, so treat these numbers as a regression test, not a field-accuracy claim. Extraction precision is only reported with a Gemini key, because offline mode would be scoring its own ground truth.
+
+Semantic script matching (Gemini `gemini-embedding-001`, 768 dims) was calibrated on the same 40 conversations: the highest-scoring legitimate sentence reached cosine 0.834, so the threshold is 0.86 (about 0.03 above it). At that threshold no legitimate sentence matches, 19 of 20 scam conversations match at least one script, and the embeddings catch sentences the keyword matcher misses (for example "He said not to tell anyone or I will be arrested"). The threshold was chosen on this set, so treat it as a starting point that real cases must re-check. Regenerate after editing the library: `node scripts/embed-scripts.mjs 0.86`.
 
 ## Project layout
 

@@ -15,13 +15,13 @@ export async function render(el) {
       ${row('Interview flow', 'Code picks the next question (purpose → coached follow-up → who/how → the one true thing → secrecy → evidence). Gemini phrases it in the customer\'s language when a key is set and sound is off; with sound on, Ruko speaks fixed questions so every line has a cached Gemini voice.', G)}
       ${row('Voices', 'Gemini TTS (gemini-3.8-flash-tts and fallbacks): Ruko, the customer and the trusted contact each have their own voice. Known lines are pre-voiced and cached on disk; anything not ready falls back to browser speech.', G)}
       ${row('Signal extraction', 'Gemini returns each signal with the customer\'s exact quote; any signal whose quote is not in the transcript is dropped. Offline: rules in Hindi and English.', G)}
-      ${row('Script matching', 'Keyword RAG-lite over a 15-entry library paraphrased from I4C, PIB, SPF and AFP material.', R)}
+      ${row('Script matching', 'A 15-entry library paraphrased from I4C, PIB, SPF and AFP material. Exact keywords first; then Gemini embeddings (gemini-embedding-001) catch the same script told in the customer\'s own words, Hindi or English. The quote is always the customer\'s own sentence, and the similarity threshold is set so no legitimate eval sentence matches. Offline: keywords only.', G)}
       ${row('Decider', 'Pure code. Weighted score, fixed thresholds, plus a coercion rule (coached + dictated → hold). Unit-tested.', R)}
       ${row('Evidence reader', 'Gemini multimodal with source boxes. Fact state is always set by code. Offline: stored ground truth for sample files only.', G)}
       ${row('Trail, clocks, validator', 'Deterministic: exact matching for legs, RBI working-day clocks, and a release gate that blocks any untraced number.', R)}
       ${row('Drafting', 'Fixed templates; Gemini may write the incident narrative using {{fact:ID}} placeholders only. Blocked narratives fall back to the victim\'s own words.', G)}
       ${row('Scam Check', 'Gemini (text or image) with quote checks; offline uses the same rules as the interview.', G)}
-      ${row('Voice input', 'Browser speech recognition (Chrome). Gemini Live API is on the roadmap.', '<span class="pill warn">Browser speech</span>')}
+      ${row('Voice input', 'The customer speaks; Gemini transcribes the recording word for word (Hindi in Devanagari, no translation) and the text lands in the answer box for the customer to check and send. Works in any browser. Offline: browser speech recognition. A two-way Gemini Live conversation is on the roadmap.', G)}
       ${row('IDS / IPS', '12 application-layer rules inspect every API request (traversal, SQLi, XSS, prompt injection, scanners, forged files, floods, enumeration). Detect or prevent mode, temporary IP bans, live console with an attack simulator. Production adds Cloud Armor and Cloud IDS.', R)}
       ${row('Bharat Bank app', 'A fictional bank. Session signals are toggles you set.', M)}
       ${row('Payee-risk lookup', 'A local list standing in for Chakshu / I4C Suspect Registry.', M)}

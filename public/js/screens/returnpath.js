@@ -1,4 +1,5 @@
 import { get, post, del } from '../api.js';
+import { dictate } from '../dictate.js';
 import { $, $$, esc, inr, sleep, toast, download, fileToDataUrl, mocked } from '../ui.js';
 import { t, state } from '../i18n.js';
 import { go } from '../main.js';
@@ -41,13 +42,14 @@ export async function render(el, [caseId, stepS]) {
       <p class="muted">${t('rp_s1d')}</p>
       ${c.interview && c.story ? `<div class="callout ok" style="margin-bottom:12px">${t('rp_prefilled')}</div>` : ''}
       <label class="field"><span>${state.lang === 'hi' ? 'आपकी बात' : 'In your words'}</span><textarea id="story" rows="7">${esc(c.story || '')}</textarea></label>
-      <div class="row" style="margin-top:8px"><button class="btn sm" id="mic" type="button">${icon('mic', { size: 15 })}${state.lang === 'hi' ? 'बोलकर लिखें' : 'Speak instead'}</button><span class="tiny muted">Hindi, English, Tamil, Kannada, Bengali</span></div>
+      <div class="row" style="margin-top:8px"><button class="btn sm" id="mic" type="button">${icon('mic', { size: 15 })}${state.lang === 'hi' ? 'बोलकर लिखें' : 'Speak instead'}</button><span class="tiny muted">${state.lang === 'hi' ? 'हिंदी, English या दोनों मिलाकर, Gemini लिखेगा' : 'Hindi, English or a mix; Gemini writes it down'}</span></div>
       ${footer()}</div>`;
-    $('#mic', body).addEventListener('click', () => {
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SR) return toast('Speech input needs Chrome');
-      const r = new SR(); r.lang = state.lang === 'hi' ? 'hi-IN' : 'en-IN'; r.interimResults = false;
-      r.onresult = (e) => { $('#story', body).value += ' ' + e.results[0][0].transcript; }; r.start(); toast('Listening…');
-    });
+    $('#mic', body).addEventListener('click', (e) => dictate({
+      lang: state.lang, button: e.currentTarget,
+      onState: (st) => { if (st === 'recording') toast(state.lang === 'hi' ? 'बोलिए… रुकने के लिए फिर से दबाएँ' : 'Speak now… tap again to stop'); if (st === 'transcribing') toast(state.lang === 'hi' ? 'Gemini लिख रहा है…' : 'Gemini is writing it down…'); },
+      onText: (text) => { const st = $('#story', body); st.value = (st.value.trim() + ' ' + text).trim(); },
+      onError: (m) => toast(m),
+    }));
     $('#next', body).addEventListener('click', async () => { const s = $('#story', body).value.trim(); if (!s) return toast(state.lang === 'hi' ? 'कुछ शब्दों में बताइए' : 'Please write a few words'); c = await post(`/cases/${c.id}/story`, { story: s }); nav(2); });
     wireBack();
   }

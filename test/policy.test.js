@@ -107,3 +107,13 @@ test('override is idempotent: a second "send anyway" adds no audit entry or SMS'
   assert.equal(twice.audit.length, once.audit.length);
   assert.equal(twice.notifications.length, once.notifications.length);
 });
+
+test('semantic script matching: off when offline, keyword matches win on merge', async () => {
+  const { semanticScriptMatches, mergeScriptMatches, SEMANTIC } = await import('../lib/semantic.js');
+  assert.equal(await semanticScriptMatches({ turns: [{ role: 'customer', text: 'A parcel in my name had drugs in it, the customs officer said.' }] }), null, 'tests run offline');
+  assert.ok(SEMANTIC.threshold >= 0.85, 'threshold stays conservative');
+  const kw = [{ scriptId: 'S01', name: 'Parcel', quote: 'parcel' }];
+  const sem = [{ scriptId: 'S01', quote: 'x', method: 'semantic' }, { scriptId: 'S02', quote: 'y', method: 'semantic' }];
+  const m = mergeScriptMatches(kw, sem);
+  assert.deepEqual(m.map((x) => `${x.scriptId}:${x.method}`), ['S01:keyword', 'S02:semantic']);
+});

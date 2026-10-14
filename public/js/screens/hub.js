@@ -75,18 +75,25 @@ export async function render(el) {
   </section>
 
   <section class="stats-band stagger" aria-label="${hi ? 'समस्या का आकार' : 'Scale of the problem'}">
-    <div style="--i:0"><div class="num">₹22,495 cr</div><div class="lbl">${hi ? '2025 में साइबर फ़्रॉड से नुकसान' : 'lost to cyber fraud in India, 2025'}</div></div>
-    <div style="--i:1"><div class="num">1.23 lakh</div><div class="lbl">${hi ? 'डिजिटल अरेस्ट शिकायतें, 2024' : 'digital-arrest complaints, 2024'}</div></div>
-    <div style="--i:2"><div class="num">&lt; 1%</div><div class="lbl">${hi ? 'डिजिटल अरेस्ट का पैसा वापस मिला (SC, अगस्त 2026)' : 'of digital-arrest losses restored (SC order, Aug 2026)'}</div></div>
-    <div style="--i:3"><div class="num">0 / 41</div><div class="lbl">${hi ? 'प्रोडक्ट्स जो पेमेंट पर ग्राहक से बात करते हैं' : 'products reviewed that interview the customer at payment'}</div></div>
+    <div style="--i:0"><div class="num">₹22,495 cr</div><div class="lbl">${hi ? '2025 में साइबर फ़्रॉड का रिपोर्ट किया गया नुकसान (24 लाख शिकायतें)' : 'reported lost to financial cyber fraud in 2025, across 24 lakh complaints'}</div></div>
+    <div style="--i:1"><div class="num">1.23 lakh</div><div class="lbl">${hi ? 'डिजिटल अरेस्ट शिकायतें 2024 में, ₹1,935 cr का नुकसान' : 'digital-arrest complaints in 2024, ₹1,935 cr lost'}</div></div>
+    <div style="--i:2"><div class="num">₹8,189 cr</div><div class="lbl">${hi ? '1930 से रोका गया (2021–2025), जबकि ₹55,649 cr रिपोर्ट हुआ' : 'held by 1930 / CFCFRMS, 2021–2025, of ₹55,649 cr reported'}</div></div>
+    <div style="--i:3"><div class="num">₹18 cr</div><div class="lbl">${hi ? 'Money Restoration Module से अब तक वापस (36,290 केस)' : 'returned so far through the Money Restoration Module, 36,290 cases'}</div></div>
   </section>
-  <p class="tiny muted" style="margin-top:8px">${hi ? 'स्रोत: संसद में दिए गए आँकड़े और प्रेस रिपोर्ट, डोज़ियर के Evidence Base से। स्लाइड पर लगाने से पहले मूल स्रोत जाँचें।' : 'Sources: parliamentary figures and press reports, from the dossier Evidence Base. Verify at the primary source before putting them on a slide.'}</p>
+  <p class="tiny muted" style="margin-top:8px">${hi ? 'स्रोत' : 'Sources'}: MHA, Rajya Sabha USQ 1341 (11 Feb 2026) · MHA, Rajya Sabha reply (12 Mar 2025) · Supreme Court, <i>In Re: Victims of Digital Arrest</i>, 2026 SCC OnLine SC 1532 (4 Aug 2026). ${hi ? 'रिपोर्ट की गई रकम शिकायतकर्ताओं की बताई हुई है, जाँची हुई नहीं।' : 'Reported amounts are what complainants state, not verified losses.'}</p>
 
   <div class="section-title"><h2>${hi ? 'एक केस, तीन पल' : 'One case, three moments'}</h2><span class="muted small">${hi ? 'वही Case object पेमेंट से रिफ़ंड तक चलता है' : 'The same Case object travels from payment to refund'}</span></div>
   <section class="moments" id="moments">
     <div class="moment"><div class="n">01 · ${hi ? 'पैसा जाने से पहले' : 'Before the money leaves'}</div><div class="node">${icon('stop', { size: 18 })}</div><div class="t">${t('m1')}</div><p class="small muted" style="margin:0">${t('m1d')}</p></div>
     <div class="moment"><div class="n">02 · ${hi ? 'अगर ओवरराइड हो' : 'If they override'}</div><div class="node">${icon('snow', { size: 18 })}</div><div class="t">${t('m2')}</div><p class="small muted" style="margin:0">${t('m2d')}</p></div>
     <div class="moment"><div class="n">03 · ${hi ? 'फ़्रीज़ के बाद' : 'After the freeze'}</div><div class="node">${icon('undo', { size: 18 })}</div><div class="t">${t('m3')}</div><p class="small muted" style="margin:0">${t('m3d')}</p></div>
+  </section>
+
+  <div class="section-title"><h2>${hi ? 'भारत के 2026 ढाँचे में Ruko कहाँ बैठता है' : "Where Ruko fits India's 2026 framework"}</h2><span class="muted small">${hi ? 'जो पहले से है, उसकी जगह नहीं, उसके साथ' : 'Works with what exists, not instead of it'}</span></div>
+  <section class="grid g3 stagger fit">
+    <div class="card" style="--i:0"><div class="eyebrow">${hi ? 'रोको' : 'Stop'}</div><h3 style="margin:6px 0">${hi ? 'पैसा जाने से पहले' : 'Before the money leaves'}</h3><p class="small muted" style="margin:0">${hi ? 'सुप्रीम कोर्ट (4 अगस्त 2026) ने RBI से temporary debit hold और delayed-transaction safeguard का SOP माँगा। Ruko वही hold है, पर ग्राहक से बात करके, सबूत के साथ, और 24 घंटे में इंसानी रास्ते के साथ।' : 'The Supreme Court (4 Aug 2026) asked RBI for a temporary debit hold SOP and a delayed-transaction safeguard. Ruko is that hold, decided by talking to the customer, with cited reasons and a human way out within 24 hours.'}</p></div>
+    <div class="card" style="--i:1"><div class="eyebrow">${hi ? 'फ़्रीज़' : 'Freeze'}</div><h3 style="margin:6px 0">${hi ? 'गोल्डन आवर में शिकायत' : 'A complaint inside the golden hour'}</h3><p class="small muted" style="margin:0">${hi ? '1930 / CFCFRMS तभी पैसा रोक पाता है जब शिकायत जल्दी और पूरी हो। Ruko override से पहले ही सब कुछ दर्ज कर लेता है, तो पीड़ित को कहानी दोबारा नहीं सुनानी पड़ती।' : '1930 / CFCFRMS can only hold money when the complaint is fast and complete. Ruko has already captured everything before the override, so the victim never retells the story.'}</p></div>
+    <div class="card" style="--i:2"><div class="eyebrow">${hi ? 'वापसी' : 'Return'}</div><h3 style="margin:6px 0">${hi ? 'MRM और GRM के लिए तैयार फ़ाइल' : 'A file ready for MRM and GRM'}</h3><p class="small muted" style="margin:0">${hi ? 'MHA का Money Restoration Module (अप्रैल 2026) सिर्फ़ फ़्रीज़ हुआ पैसा लौटाता है, और Grievance Redressal Module गलत फ़्रीज़ के लिए है। ReturnPath दोनों के लिए cited केस फ़ाइल बनाता है; Scenario C वही दूसरा दरवाज़ा है।' : "MHA's Money Restoration Module (April 2026) returns money that is already frozen; the Grievance Redressal Module handles wrongful freezes. ReturnPath builds the cited case file for both; Scenario C is that second door."}</p></div>
   </section>
 
   <div class="section-title"><h2>${t('hub_pick')}</h2><span class="muted small">${hi ? 'सब नकली (synthetic) डेटा' : 'All synthetic data'}</span></div>

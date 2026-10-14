@@ -109,6 +109,7 @@ const COMMANDS = () => [
   { label: 'Judge demo (hands-free)', hint: 'Tour', ic: 'sparkles', run: () => startTour({ auto: true }) },
   { label: 'Switch language', hint: state.lang === 'hi' ? 'English' : 'हिंदी', ic: 'languages', run: () => { setLang(state.lang === 'hi' ? 'en' : 'hi'); render(); } },
   { label: 'Sound on / off', hint: 'Voices and call audio', ic: 'volume', run: () => { sound.on = !sound.on; } },
+  { label: 'Larger text on / off', hint: 'Accessibility', ic: 'eye', run: () => $('#textBtn').click() },
   { label: 'Light theme', hint: 'Theme', ic: 'sun', run: () => setTheme('light') },
   { label: 'Dark theme', hint: 'Theme', ic: 'moon', run: () => setTheme('dark') },
   { label: 'Follow system theme', hint: 'Theme', ic: 'monitor', run: () => setTheme('system') },
@@ -161,6 +162,10 @@ window.addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.ke
 if (!STATIC) window.addEventListener('hashchange', render);
 const drawSound = () => { const b = $('#soundBtn'); b.innerHTML = icon(sound.on ? 'volume' : 'volumeOff'); b.setAttribute('aria-pressed', sound.on); b.setAttribute('aria-label', sound.on ? 'Sound on: click to mute' : 'Sound off: click to turn on'); b.title = sound.on ? 'Voices and call audio: on' : 'Voices and call audio: off'; };
 $('#soundBtn').addEventListener('click', () => { sound.on = !sound.on; });
+// Larger text: older customers are the people Ruko protects. Scales the content area only.
+const drawText = () => { const on = document.documentElement.classList.contains('big-text'); const b = $('#textBtn'); b.setAttribute('aria-pressed', on); b.classList.toggle('on', on); b.title = on ? 'Larger text: on' : 'Larger text (for older customers)'; };
+$('#textBtn').addEventListener('click', () => { const on = document.documentElement.classList.toggle('big-text'); try { localStorage.setItem('ruko_bigtext', on ? '1' : '0'); } catch {} drawText(); });
+drawText();
 onSoundChange(drawSound);
 hydrateIcons();
 drawSound();

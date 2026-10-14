@@ -3,7 +3,7 @@
 //   node scripts/build-static.mjs web       → dist-web/       Firebase Hosting, live Gemini from the
 //                                              browser with WEB_GEMINI_API_KEY from .env (never committed)
 import { cpSync, mkdirSync, rmSync, readFileSync, writeFileSync, readdirSync, statSync, existsSync, copyFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SCENARIOS, repliesFor, callScriptFor } from '../data/scenarios.js';
 import { Q, finalMessage } from '../lib/interviewer.js';
@@ -22,7 +22,8 @@ mkdirSync(join(OUT, 'tts'), { recursive: true });
 
 // 1. Frontend, application core and data (no Node-only files).
 cpSync(join(ROOT, 'public'), join(OUT, 'public'), { recursive: true });
-for (const f of ['app.js', 'policy.js', 'interviewer.js', 'extractor.js', 'casefile.js', 'gemini.js', 'ids.js']) copyFileSync(join(ROOT, 'lib', f), join(OUT, 'lib', f));
+const NODE_ONLY = new Set(['env.js', 'tts.js']); // read .env / write the disk cache
+for (const f of readdirSync(join(ROOT, 'lib'))) if (f.endsWith('.js') && !NODE_ONLY.has(f)) copyFileSync(join(ROOT, 'lib', f), join(OUT, 'lib', f));
 for (const f of readdirSync(join(ROOT, 'data'))) if (f.endsWith('.js')) copyFileSync(join(ROOT, 'data', f), join(OUT, 'data', f));
 
 // 2. Voices that were generated with Gemini TTS ship as WAV files with a lookup table.
@@ -71,5 +72,13 @@ if (TARGET === 'web') {
 // 4. Report.
 const walk = (d) => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]));
 const files = walk(OUT);
+// Every relative import in the build must resolve inside the build, or the site loads blank.
+const missing = [];
+for (const f of files.filter((x) => x.endsWith('.js'))) {
+  for (const m of readFileSync(f, 'utf8').matchAll(/(?:import\s[^'"]*?from\s*|import\(\s*)['"](\.{1,2}\/[^'"]+)['"]/g)) {
+    if (!existsSync(join(dirname(f), m[1]))) missing.push(`${f.slice(OUT.length + 1)} → ${m[1]}`);
+  }
+}
+if (missing.length) { console.error(`Broken imports in the build:\n  ${missing.join('\n  ')}`); process.exit(1); }
 const bytes = files.reduce((s, f) => s + statSync(f).size, 0);
 console.log(`${TARGET === 'web' ? 'dist-web' : 'dist-artifact'}: ${files.length} files, ${(bytes / 1e6).toFixed(1)} MB, ${Object.keys(manifest).length} voiced lines`);
