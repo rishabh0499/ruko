@@ -1,6 +1,6 @@
 // Server-less builds (the Firebase website and the Claude artifact) run the same application
 // core (lib/app.js) here, in the browser. Cases live in this viewer's localStorage. On Firebase
-// a restricted website-only key (window.RUKO_ENV) gives live Gemini straight from the browser;
+// a Gemini-API-only key (window.RUKO_ENV) gives live Gemini straight from the browser;
 // the Claude artifact has no key and runs the offline rules engine.
 import { createApp } from '../../lib/app.js';
 import MANIFEST from './tts-manifest.js';

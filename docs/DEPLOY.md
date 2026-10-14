@@ -16,7 +16,7 @@ Live: https://ruko-ai.web.app
 node scripts/build-static.mjs web      # dist-web/ banata hai, .env ka WEB_GEMINI_API_KEY andar daalta hai
 node scripts/deploy-firebase.mjs       # gcloud login token se Hosting REST API pe deploy
 ```
-- Key public site mein jaati hai, isliye Google Cloud console mein usko restrict karna zaroori hai: website `https://ruko-ai.web.app/*` aur `https://ruko-ai.firebaseapp.com/*`, API sirf Generative Language API.
+- Key public site mein jaati hai. AI Studio ki key service account se bound hai, isliye Google us pe website restriction lagne nahi deta (sirf API restriction: Gemini API, jo laga hai). Project pe billing nahi hai, toh misuse se paisa nahi jaata; zyada se zyada free quota khatam hoga aur app offline rules pe chala jaayega. Pakka ilaaj: Firebase AI Logic + App Check (key server side).
 - `dist-web/` gitignored hai; kabhi commit mat karna.
 
 ### Auto-deploy (GitHub Actions)

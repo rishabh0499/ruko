@@ -148,7 +148,7 @@ test/                   node:test unit tests
 
 ## Deploy
 
-The live site is a static build on Firebase Hosting (free Spark plan): `node scripts/build-static.mjs web && node scripts/deploy-firebase.mjs`. The whole app runs in the browser and calls Gemini directly, with a key restricted to the site's domains and the Generative Language API. A Cloud Run path (`Dockerfile`, `deploy.sh`) is also ready for the Node server. See `docs/DEPLOY.md` (Hinglish) and `docs/VIDEO_SCRIPT.md` (3-minute video).
+The live site is a static build on Firebase Hosting (free Spark plan): `node scripts/build-static.mjs web && node scripts/deploy-firebase.mjs`. The whole app runs in the browser and calls Gemini directly, with a key limited to the Gemini API on a project with no billing (Google does not allow website restrictions on service-account-bound AI Studio keys; production moves the key server-side with Firebase AI Logic and App Check). A Cloud Run path (`Dockerfile`, `deploy.sh`) is also ready for the Node server. See `docs/DEPLOY.md` (Hinglish) and `docs/VIDEO_SCRIPT.md` (3-minute video).
 
 ## Safety notes
 
