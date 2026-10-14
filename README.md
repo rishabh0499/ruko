@@ -23,7 +23,7 @@ One **Case** object, three moments:
 Requirements: **Node.js 20+**. Nothing else: no `npm install`, no database.
 
 ```bash
-cd ruko-app
+git clone https://github.com/rishabh0499/ruko.git && cd ruko
 node server.js          # or double-click start.command on macOS
 # open http://localhost:8790
 ```
@@ -58,6 +58,8 @@ Ruko holds victims' evidence, bank details and an AI pipeline, so the platform i
 | RK-IDS-002 / 003 | SQL injection, script injection (XSS) in any JSON field | Block |
 | RK-IDS-004 | Prompt injection aimed at the AI (in requests and inside uploaded evidence) | Alert only: a victim may quote the scammer; the pipeline already treats it as data |
 | RK-IDS-005 / 006 | Request flood; AI endpoint cost abuse | Ban 60 s / rate-limit |
+
+On the live website the app runs in the browser, so the same engine inspects every in-app request and the flood and AI-cost rules guard the shared Gemini quota. Firebase Hosting adds a strict Content-Security-Policy (no inline script except two hashed ones; only this site, Google Fonts and the Gemini API), `frame-ancestors 'none'`, `X-Frame-Options: DENY`, HSTS and a Permissions-Policy.
 | RK-IDS-007 / 008 / 011 | Scanner probes (`/.env`, `/.git`…), attack-tool user-agents, 404 enumeration | Ban / block |
 | RK-IDS-009 | Forged evidence: declared file type does not match magic bytes | Block |
 | RK-IDS-010 / 012 | State-change bursts on one case; malformed bodies | Alert |
@@ -108,7 +110,7 @@ Ruko holds victims' evidence, bank details and an AI pipeline, so the platform i
 | Evidence reading with source boxes (Gemini; offline uses stored ground truth for samples) | 1930 / NCRP / bank submission (drafted, never submitted) |
 | Money trail, RBI working-day clocks, document validator | Officer view authentication |
 | Drafting into fixed templates | All people, accounts, documents and the eval set |
-| Scam Check | Voice is browser speech, not Gemini Live (roadmap) |
+| Scam Check | Voice is pre-recorded Gemini TTS lines, not a live two-way Gemini Live conversation (roadmap) |
 
 ## Architecture (local build)
 

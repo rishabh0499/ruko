@@ -36,13 +36,30 @@ for (const f of walk(DIR)) {
   blobs[hash] = z;
 }
 
-// 1. New version with caching headers; every path not found falls back to the app shell.
+// Content-Security-Policy: only this site, Google Fonts and the Gemini API. The two inline
+// scripts in index.html (theme, runtime config) are allowed by hash, so no 'unsafe-inline' script.
+const html = readFileSync(join(DIR, 'index.html'), 'utf8');
+const hashes = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => `'sha256-${createHash('sha256').update(m[1]).digest('base64')}'`);
+const CSP = [
+  "default-src 'self'", `script-src 'self' ${hashes.join(' ')}`, "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src https://fonts.gstatic.com", "img-src 'self' data: blob:", "media-src 'self' data: blob:",
+  "connect-src 'self' https://generativelanguage.googleapis.com", "object-src 'none'", "base-uri 'none'", "form-action 'none'",
+  "frame-ancestors 'none'", 'upgrade-insecure-requests',
+].join('; ');
+const SECURITY = {
+  'Content-Security-Policy': CSP, 'X-Frame-Options': 'DENY', 'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin', 'Cross-Origin-Opener-Policy': 'same-origin',
+  'Permissions-Policy': 'microphone=(self), camera=(), geolocation=(), payment=(), usb=()',
+};
+if (process.argv.includes('--print-headers')) { console.log(JSON.stringify(SECURITY, null, 1)); process.exit(0); }
+
+// 1. New version with caching and security headers; unknown paths fall back to the app shell.
 const version = await call('POST', `${API}/sites/${SITE}/versions`, {
   config: {
     headers: [
       { glob: '**/*.@(js|css)', headers: { 'Cache-Control': 'no-cache' } },
       { glob: '/tts/**', headers: { 'Cache-Control': 'public, max-age=604800' } },
-      { glob: '**', headers: { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin' } },
+      { glob: '**', headers: SECURITY },
     ],
     rewrites: [{ glob: '**', path: '/index.html' }],
   },

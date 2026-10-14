@@ -79,8 +79,13 @@ async function browserTts(speaker, text) {
 const app = createApp(platform);
 const wire = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v))); // same shape as over HTTP
 
+// The in-browser IDS/IPS sees this viewer as one client, not as loopback: loopback is the
+// trusted local operator and is never throttled, but on the public site the flood and
+// AI-cost rules (RK-IDS-005/006) must apply, because they protect the shared Gemini quota.
+const CLIENT = 'browser-client';
+
 export async function request(method, path, body) {
   const [p] = path.split('?');
-  const r = await app.handle({ ip: '127.0.0.1', method, path: p, rawUrl: path, headers: {} }, wire(body) || {});
+  const r = await app.handle({ ip: CLIENT, method, path: p, rawUrl: path, headers: { 'user-agent': navigator.userAgent } }, wire(body) || {});
   return { status: r.status, json: wire(r.json), binary: r.binary || null };
 }

@@ -11,12 +11,13 @@ export async function render(el) {
   const results = [];
   el.innerHTML = `
     <div class="rp-head"><div><div class="eyebrow">Platform security</div><h2>IDS / IPS</h2>
-      <p class="muted small" style="max-width:760px;margin:6px 0 0">Ruko holds victims' screenshots, bank details and an AI pipeline, and sits in a bank's payment flow, so the platform itself is a target. Every API request is inspected before it reaches a route. <b>Detect</b> mode records (IDS); <b>Prevent</b> mode also blocks, rate-limits and bans (IPS).</p></div>
+      <p class="muted small" style="max-width:760px;margin:6px 0 0">Ruko holds victims' screenshots, bank details and an AI pipeline, and sits in a bank's payment flow, so the platform itself is a target. Every API request is inspected before it reaches a route. <b>Detect</b> mode records (IDS); <b>Prevent</b> mode also blocks, rate-limits and bans (IPS).</p>
+      ${window.RUKO_STATIC ? `<p class="muted small" style="max-width:760px;margin:8px 0 0">${icon('info', { size: 14 })} <b>On this website</b> the app runs in your browser, so the same IDS/IPS engine inspects every in-app request here, and the flood and AI-cost rules protect the shared Gemini quota. Network-level protection comes from Google's edge (TLS, HSTS, DDoS), a strict Content-Security-Policy with no inline scripts except two hashed ones, frame-ancestors none, and a Gemini key restricted to this site's domains and the Generative Language API.</p>` : ''}</div>
       <div class="seg" role="radiogroup" aria-label="Mode" id="mode"><button type="button" data-m="detect" role="radio">${icon('eye', { size: 15 })} Detect (IDS)</button><button type="button" data-m="prevent" role="radio">${icon('shield', { size: 15 })} Prevent (IPS)</button></div></div>
     <section class="stats-band" id="kpis"></section>
     <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);margin-top:18px;gap:18px">
       <div class="card"><div class="card-head"><h3>${icon('zap')}Attack simulator</h3><span class="tiny muted">from 203.0.113.0/24 (TEST-NET)</span></div>
-        <p class="small muted">Replays real attack traffic against this server. You are never banned: the simulator uses reserved documentation addresses.</p>
+        <p class="small muted">Replays real attack traffic through the same inspection path as a real request. You are never banned: the simulator uses reserved documentation addresses.</p>
         <div class="stack" id="sims">${sims.map((s) => `<button class="btn" data-sim="${s.id}" type="button" style="justify-content:space-between;width:100%"><span class="row" style="gap:8px">${icon('play', { size: 14 })}${esc(s.label)}</span><span class="tiny muted" data-res="${s.id}"></span></button>`).join('')}</div>
         <div class="row" style="margin-top:12px"><button class="btn primary" id="all" type="button">${icon('zap', { size: 15 })}Run all</button><button class="btn ghost sm" id="reset" type="button">${icon('trash', { size: 14 })}Clear events</button></div>
       </div>
