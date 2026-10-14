@@ -2,7 +2,7 @@
 // the gcloud login (no Firebase CLI needed). Build first: node scripts/build-static.mjs web
 // Usage: node scripts/deploy-firebase.mjs [site-id]   (default: ruko-ai)
 import { execSync } from 'node:child_process';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { createHash } from 'node:crypto';
 import { gzipSync as gz } from 'node:zlib';
@@ -12,8 +12,10 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const DIR = join(ROOT, 'dist-web');
 const SITE = process.argv[2] || 'ruko-ai';
 const PROJECT = process.env.FIREBASE_PROJECT || SITE;
-const GCLOUD = process.env.GCLOUD || `${process.env.HOME}/.local/bin/gcloud`;
-const token = execSync(`"${GCLOUD}" auth print-access-token`, { encoding: 'utf8' }).trim();
+// Token: GOOGLE_ACCESS_TOKEN in CI (GitHub Actions, keyless Workload Identity), else the local gcloud login.
+const LOCAL_GCLOUD = `${process.env.HOME}/.local/bin/gcloud`;
+const GCLOUD = process.env.GCLOUD || (existsSync(LOCAL_GCLOUD) ? LOCAL_GCLOUD : 'gcloud');
+const token = process.env.GOOGLE_ACCESS_TOKEN || execSync(`"${GCLOUD}" auth print-access-token`, { encoding: 'utf8' }).trim();
 const H = { authorization: `Bearer ${token}`, 'x-goog-user-project': PROJECT, 'content-type': 'application/json' };
 const API = 'https://firebasehosting.googleapis.com/v1beta1';
 

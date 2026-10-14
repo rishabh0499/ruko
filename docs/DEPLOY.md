@@ -19,6 +19,13 @@ node scripts/deploy-firebase.mjs       # gcloud login token se Hosting REST API 
 - Key public site mein jaati hai, isliye Google Cloud console mein usko restrict karna zaroori hai: website `https://ruko-ai.web.app/*` aur `https://ruko-ai.firebaseapp.com/*`, API sirf Generative Language API.
 - `dist-web/` gitignored hai; kabhi commit mat karna.
 
+### Auto-deploy (GitHub Actions)
+`main` pe har push ke baad `.github/workflows/deploy.yml` chalta hai: tests, build, phir Firebase pe deploy. 1-2 minute mein live site update.
+- Login keyless hai (Workload Identity Federation). GitHub mein koi Google key nahi hai; sirf `rishabh0499/ruko` ki `main` branch deploy kar sakti hai, service account `github-deployer` ke through, jiske paas sirf Firebase Hosting ka role hai.
+- GitHub secret: `WEB_GEMINI_API_KEY`. Variables: `GCP_WIF_PROVIDER`, `GCP_DEPLOY_SA`, `GEMINI_MODEL_FAST`, `GEMINI_MODEL_PRO`.
+- Ek baar ka setup: `bash scripts/setup-ci.sh` (dobara chalana safe hai).
+- Voice files `assets/tts/` mein commit hoti hain taaki CI build mein awaaz rahe. Local build naye `store/tts` recordings wahan copy kar deta hai.
+
 ## 2b. Cloud Run (optional, billing chahiye)
 1. gcloud install karo: https://cloud.google.com/sdk/docs/install
 2. Login aur project:
