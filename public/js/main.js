@@ -10,6 +10,7 @@ const screens = {
   bank: () => import('./screens/bank.js'),
   case: () => import('./screens/returnpath.js'),
   scamcheck: () => import('./screens/scamcheck.js'),
+  risk: () => import('./screens/risk.js'),
   desk: () => import('./screens/desk.js'),
   officer: () => import('./screens/officer.js'),
   eval: () => import('./screens/eval.js'),
@@ -19,7 +20,7 @@ const screens = {
 };
 const META = {
   hub: ['Demo Hub', 'home', 'Customer'], bank: ['Bharat Bank + Ruko', 'bank', 'Customer'], case: ['ReturnPath', 'file', 'Customer'], scamcheck: ['Scam Check', 'search', 'Customer'],
-  desk: ['Fraud Desk', 'desk', 'Bank'], officer: ['Officer View', 'badge', 'Police'], eval: ['Evaluation', 'chart', 'Judges'], studio: ['Evidence Studio', 'flask', 'Judges'], real: ['Real vs Mocked', 'scale', 'Judges'], security: ['Security · IDS/IPS', 'shield', 'Platform'],
+  risk: ['Risk Engine', 'zap', 'Bank'], desk: ['Fraud Desk', 'desk', 'Bank'], officer: ['Officer View', 'badge', 'Police'], eval: ['Evaluation', 'chart', 'Judges'], studio: ['Evidence Studio', 'flask', 'Judges'], real: ['Real vs Mocked', 'scale', 'Judges'], security: ['Security · IDS/IPS', 'shield', 'Platform'],
 };
 
 export const app = { config: null, current: null, cleanup: null };

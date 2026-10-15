@@ -9,6 +9,8 @@ import { icon } from '../icons.js';
 // Where a case stands from the police side. "resolved" means no police action is pending.
 export function result(c) {
   if (c.door === 'frozen_holder') return c.docs ? { k: 'frozen', tone: 'info', label: 'Frozen holder: release papers drafted', next: 'Verify the bona fide trail; respond to the release application' } : { k: 'frozen', tone: 'info', label: 'Frozen holder: papers in progress', next: 'Wait for the account holder\'s documents' };
+  if (c.lostINR && c.complaint) return { k: 'lost', tone: 'bad', label: 'Money lost: complaint filed', next: 'Request a lien on the receiving account; trace onward transfers' };
+  if (c.paymentStatus === 'stopped') return { k: 'prevented', tone: 'ok', resolved: !!c.complaint, label: 'Prevented: stopped by the bank', next: c.complaint ? 'Attempt reported; add the payee and caller to the suspect registry' : 'Attempt to be reported by the customer' };
   if (c.paymentStatus === 'cancelled') return { k: 'prevented', tone: 'ok', resolved: true, label: 'Prevented: customer cancelled', next: 'None. Optional: add the payee to the suspect registry' };
   if (c.paymentStatus === 'held') return { k: 'prevented', tone: 'ok', resolved: true, label: 'Prevented: payment on hold', next: 'None while the hold lasts; the bank desk is on it' };
   if (c.paymentStatus === 'sent' && (c.overridden || c.lostINR)) return c.annexure ? { k: 'lost', tone: 'bad', label: 'Money lost: annexure ready', next: 'Request a lien on the receiving account; trace onward transfers' } : { k: 'lost', tone: 'bad', label: 'Money lost: complaint in progress', next: 'Victim is building the case file; 1930 complaint pending' };
@@ -73,11 +75,12 @@ function renderCase(el, c, row) {
   const claims = conf.filter((f) => f.group === 'claim');
   const annex = c.artefacts.find((a) => a.kind === 'cyber_cell_annexure');
   const lost = r.k === 'lost' ? (c.moneyTrail?.totals?.lost || c.payment?.amountINR) : null, traced = c.moneyTrail?.totals?.traced;
-  const kept = r.k === 'prevented' ? c.payment?.amountINR : null;
+  const kept = r.k === 'prevented' || ['cancelled', 'stopped'].includes(c.paymentStatus) ? c.payment?.amountINR : null;
   el.innerHTML = `
     ${banner}
     <div class="row between" style="margin-bottom:14px;align-items:flex-end"><div><a href="#/officer" class="small">${icon('arrowLeft', { size: 13 })} All cases</a>
       <h2 style="margin:4px 0 0">${esc(c.customer.name)} <span class="mono muted small">${c.id}</span></h2>
+      ${c.complaint ? `<div class="pill info" style="margin-top:6px">${icon('check', { size: 12 })}1930 / NCRP complaint · ack ${esc(c.complaint.ack)}</div>` : ''}
       <div class="row small muted" style="flex-wrap:wrap">${c.customer.age} yrs · ${esc(c.customer.city)} · A/c ${esc(c.customer.accountMasked)} · ${c.door === 'frozen_holder' ? 'Bona fide account holder (frozen)' : r.k === 'lost' || r.k === 'prevented' ? 'Suspected victim of official impersonation' : 'Payer'} · ${pill(r)}</div></div>
       <div class="row no-print"><a class="btn" href="#/desk/${c.id}">${icon('desk', { size: 15 })}Fraud desk</a><a class="btn" href="#/case/${c.id}/${c.artefacts.length ? 6 : 1}">${icon('file', { size: 15 })}Case file</a><button class="btn" id="print" type="button">${icon('printer', { size: 15 })}Print</button></div></div>
 
@@ -108,6 +111,9 @@ function renderCase(el, c, row) {
         <div class="card"><h3>${icon(c.door === 'frozen_holder' ? 'snow' : 'link')}${c.door === 'frozen_holder' ? 'Freeze' : 'Money trail'}</h3>
           ${c.moneyTrail?.legs?.length ? c.moneyTrail.legs.map((l) => `<div style="padding:8px 0;border-bottom:1px dashed var(--border)"><b>${inr(l.amountINR)}</b> → <span class="mono">${esc(l.to)}</span> ${l.toName ? esc(l.toName) : ''}<div class="tiny muted">${esc(l.date || '')} · UTR ${esc(l.utr || 'missing')} · ${l.confirmed ? 'confirmed' : 'gap'}${l.flagged ? ' · reported account' : ''}</div><div class="tiny">Next: receiving bank (lien) · cyber cell (trace onward) · magistrate (release)</div></div>`).join('') + `<div class="small" style="margin-top:8px">Total ${inr(c.moneyTrail.totals.lost)} · traced ${inr(c.moneyTrail.totals.traced)}</div>`
             : c.frozen ? `<div class="small">Frozen ${inr(c.frozen.frozenINR)} · disputed ${inr(c.frozen.disputedINR)} · excess ${inr(c.frozen.excessINR)}</div>` : '<p class="small muted">Not built yet (no money left the account, or the victim has not reached this step).</p>'}</div>
+        ${!iv?.decision && c.risk ? `<div class="card"><h3>${icon('shield')}Why Ruko stopped it</h3><div class="row between small"><span class="pill ${c.risk.tier >= 4 ? 'bad' : 'warn'}">T${c.risk.tier} · ${esc(c.risk.name)}</span><span>Risk score <b>${c.risk.score}</b></span></div>
+          <table class="t" style="margin-top:8px"><tbody>${c.risk.reasons.filter((x) => x.points > 0).slice(0, 6).map((x) => `<tr><td class="small">${esc(x.label)}</td><td style="text-align:right;font-weight:700;color:var(--bad)">+${x.points}</td></tr>`).join('')}</tbody></table>
+          ${(c.risk.patterns || []).length ? `<div class="group-h">Journey patterns</div>${c.risk.patterns.map((pt) => `<div class="small"><b>${esc(pt.name)}</b> · ${Math.round(pt.confidence * 100)}%<div class="tiny muted">${esc(pt.why || '')}</div></div>`).join('')}` : ''}</div>` : ''}
         ${iv?.decision ? `<div class="card"><h3>${icon('shield')}${['hold_trusted_contact', 'escalate'].includes(iv.outcome) ? 'Why Ruko stopped it' : 'Why Ruko let it through'}</h3><div class="row between small"><span>${outcomePill(iv.outcome)}</span><span>Risk score <b>${iv.decision.score}</b></span></div>
           <table class="t" style="margin-top:8px"><tbody>${iv.decision.contributions.slice(0, 6).map((x) => `<tr><td class="small">${esc(x.label)}${x.quote ? `<div class="tiny muted"><i>“${esc(String(x.quote).slice(0, 140))}”</i></div>` : ''}</td><td style="text-align:right;font-weight:700;color:${x.points > 0 ? 'var(--bad)' : 'var(--ok)'}">${x.points > 0 ? '+' : ''}${x.points}</td></tr>`).join('')}</tbody></table>
           ${(iv.scriptMatches || []).length ? `<div class="group-h">Known scam scripts matched</div>${iv.scriptMatches.map((s) => `<div class="small"><b>${esc(s.scriptId)}</b> ${esc(s.name)}<div class="tiny muted">source: ${esc(s.source)}</div></div>`).join('')}` : ''}</div>` : ''}

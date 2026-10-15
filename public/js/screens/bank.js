@@ -84,13 +84,21 @@ export async function render(el, [caseId]) {
           <label class="field" style="width:110px"><span>${T('bb_rail')}</span><select name="rail">${['UPI', 'IMPS', 'NEFT', 'RTGS'].map((r) => `<option ${r === p.rail ? 'selected' : ''}>${r}</option>`).join('')}</select></label></div>
           <label class="field"><span>${T('bb_amt')}</span><input type="number" name="amountINR" value="${p.amountINR}"></label>
         </div>
-        <details class="bb-card" ${ss.activeVideoCall ? 'open' : ''}><summary class="small" style="font-weight:700;cursor:pointer">${T('bb_signals')} </summary>
-          <div class="tiny" style="color:#8a6d00;margin:6px 0">A real bank SDK would see these. Here you set them.</div>
-          <label class="switch" style="color:#1b1a18"><input type="checkbox" name="activeVideoCall" ${ss.activeVideoCall ? 'checked' : ''}> ${T('bb_video')}</label>
-          <label class="switch" style="color:#1b1a18"><input type="checkbox" name="activeScreenShare" ${ss.activeScreenShare ? 'checked' : ''}> ${T('bb_share')}</label>
-          <label class="switch" style="color:#1b1a18"><input type="checkbox" name="remoteAccessApp" ${ss.remoteAccessApp ? 'checked' : ''}> ${T('bb_remote')}</label>
-        </details>
+        <div class="auto-note">${icon('shieldCheck', { size: 14 })}<span>${L2 === 'hi' ? 'Ruko बाकी सब अपने-आप देखता है: नया प्राप्तकर्ता, उसका खाता कितना पुराना, आपकी पिछली पेमेंट और फ़ोन पर क्या चल रहा है।' : 'Ruko checks the rest by itself: whether the payee is new, how old their account is, your recent payments and what is running on this phone.'}</span></div>
         <button class="bb-btn" type="submit" id="payBtn">${T('bb_pay')} ${inr(p.amountINR)}</button></form></div>`;
+    } else if (c.paymentStatus === 'warned' || c.paymentStatus === 'cooling') {
+      const cool = c.paymentStatus === 'cooling';
+      const left = cool ? Math.max(0, Math.round((Date.parse(c.cooling.until) - Date.now()) / 60000)) : 0;
+      body = `<div class="bb-body" style="display:flex;flex-direction:column;gap:12px">
+        <div class="bb-card" style="border-left:4px solid ${cool ? '#b45309' : '#1d4fbf'}"><div class="row" style="gap:8px;font-weight:800;font-size:17px">${icon(cool ? 'clock' : 'alert', { size: 18 })}${cool ? (L2 === 'hi' ? 'पेमेंट 30 मिनट के लिए रुका है' : 'Payment paused for 30 minutes') : (L2 === 'hi' ? 'भेजने से पहले एक बात' : 'One thing before you pay')}</div>
+          <div style="margin-top:8px;font-size:14.5px">${esc(c.risk?.warning || (L2 === 'hi' ? 'यह पेमेंट आपके आम पैटर्न से अलग है।' : 'This payment is different from your usual pattern.'))}</div>
+          <div class="tiny" style="color:#5b6470;margin-top:8px">${esc((c.risk?.reasons || []).filter((x) => x.points > 0).slice(0, 2).map((x) => x.label).join(' · '))}</div>
+          ${cool ? `<div class="mono" style="margin-top:10px;font-size:22px;font-weight:700">${left}:00</div><div class="tiny" style="color:#5b6470">${L2 === 'hi' ? 'कभी भी रद्द करें। समय पूरा होने पर हम पूछेंगे "अब भी भेजना है?"' : 'Cancel any time. When the time is up we ask "still want to send?"'}</div>` : ''}
+        </div>
+        <div class="bb-card"><div style="font-weight:700">${inr(p.amountINR)} → ${esc(p.payeeName)}</div></div>
+        <button class="bb-btn" id="cancelSoft" type="button" style="background:#157a3c">${L2 === 'hi' ? 'पेमेंट रद्द करें' : 'Cancel this payment'}</button>
+        <button class="bb-btn" id="proceedSoft" type="button" style="background:#fff;color:#14161b;border:1px solid #cbc4b5">${cool ? (L2 === 'hi' ? 'अभी भेजें (डेमो: इंतज़ार छोड़ें)' : 'Send now (demo: skip the wait)') : (L2 === 'hi' ? 'समझ गया, भेजें' : 'I understand, send it')}</button>
+      </div>`;
     } else if (iv && !(c.stage === 'paid' && ui.warnAck) && !['overridden', 'evidence', 'facts', 'trail', 'artefacts', 'cancelled'].includes(c.stage) && !(c.hold?.status === 'released')) {
       body = `<div class="bb-body" style="filter:blur(2px);opacity:.6"><div class="bb-card">${inr(p.amountINR)} → ${esc(p.payeeName)}</div></div>
         <div class="sheet ${ui.sheetShown ? '' : 'anim'}" role="dialog" aria-label="${T('ruko_title')}">
@@ -119,12 +127,18 @@ export async function render(el, [caseId]) {
       const sent = c.paymentStatus === 'sent';
       body = `<div class="bb-body" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px">
         <div style="width:84px;height:84px;border-radius:50%;background:${sent ? '#e5f3e9' : '#fdeee6'};display:grid;place-items:center;color:${sent ? '#157a3c' : '#b45309'}">${icon(sent ? 'check' : 'pause', { size: 38 })}</div>
-        <div style="font-size:20px;font-weight:800">${sent ? T('bb_sent') : 'On hold'}</div>
+        <div style="font-size:20px;font-weight:800">${sent ? T('bb_sent') : c.hold?.reason === 'account_takeover' ? (L2 === 'hi' ? 'पेमेंट रोका गया' : 'Payment stopped') : 'On hold'}</div>
+        ${c.hold?.reason === 'account_takeover' ? `<div class="bb-card" style="text-align:left;font-size:14.5px">${L2 === 'hi' ? 'यह पेमेंट शायद आपने नहीं किया: नया फ़ोन, हाल में बदला SIM या कोई ऐप स्क्रीन चला रहा है। बैंक आपके रजिस्टर्ड नंबर पर कॉल कर रहा है। किसी को OTP न बताएँ।' : 'This payment may not be from you: a new phone, a recent SIM change or an app controlling the screen. The bank is calling your registered number. Do not share any OTP.'}</div>` : ''}
         <div>${inr(p.amountINR)} → ${esc(p.payeeName)}</div>
         ${c.stage !== 'paid' ? `<div class="bb-card" style="text-align:left;font-size:14.5px">${T('saved_case')}</div><button class="bb-btn" id="openCase" type="button">${T('open_case')}</button>` : ''}
       </div>`;
     }
     bank.innerHTML = statusbar(false) + `<div class="bb-head"><div class="bank">${icon('bank', { size: 16 })} BHARAT BANK</div><div class="tiny" style="opacity:.8">${esc(c.customer.name)}</div></div>` + body;
+    // What is really running on this phone (Ruko SDK sees it; the scenario simulates it). Shown live.
+    const dev = scn?.payment?.sessionSignals || {};
+    const live = !['cancelled', 'overridden'].includes(c.stage) && !(c.trustedAdvice) && c.paymentStatus !== 'sent';
+    if (live && dev.activeVideoCall) bank.insertAdjacentHTML('beforeend', `<div class="pip">${icon('badge', { size: 24 })}<span>${L2 === 'hi' ? '"अधिकारी"' : '"Officer"'} · ${L2 === 'hi' ? 'वीडियो कॉल' : 'video call'}</span><i class="live">● LIVE</i></div>`);
+    if (live && (dev.activeScreenShare || dev.remoteAccessApp)) bank.insertAdjacentHTML('beforeend', `<div class="ad-banner">${icon('monitor', { size: 13 })} ${dev.remoteAccessApp ? 'AnyDesk' : (L2 === 'hi' ? 'स्क्रीन शेयर' : 'Screen sharing')}: ${L2 === 'hi' ? 'कोई और आपकी स्क्रीन देख रहा है' : 'someone else can see this screen'}</div>`);
     const chat = $('#chat', bank); if (chat) chat.scrollTop = chat.scrollHeight;
     // Animate only what is new on this draw.
     if ($('.sheet', bank)) ui.sheetShown = true;
@@ -174,8 +188,11 @@ export async function render(el, [caseId]) {
   }
 
   function wireBank() {
+    const L2 = L(), T = (k) => tl(k, L2);
     $('#goSend', bank)?.addEventListener('click', () => { ui.phoneView = 'form'; drawBank(); });
-    $('#payForm', bank)?.addEventListener('submit', async (e) => { e.preventDefault(); await pay(new FormData(e.target)); });
+    $('#payForm', bank)?.addEventListener('submit', async (e) => { e.preventDefault(); const b = $('#payBtn', bank); b.disabled = true; b.textContent = L2 === 'hi' ? 'जाँच रहे हैं…' : 'Checking…'; await pay(new FormData(e.target)); });
+    // The Pay button always shows the amount actually being sent.
+    $('#payForm', bank)?.querySelector('[name=amountINR]')?.addEventListener('input', (e) => { $('#payBtn', bank).textContent = `${T('bb_pay')} ${inr(Number(e.target.value) || 0)}`; });
     $('#sendBtn', bank)?.addEventListener('click', () => send());
     $('#ans', bank)?.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
     $('#attachBtn', bank)?.addEventListener('click', () => { ui.attachOpen = !ui.attachOpen; drawBank(); thumbs(); });
@@ -187,13 +204,15 @@ export async function render(el, [caseId]) {
     $('#override', bank)?.addEventListener('click', override);
     $('#callTc', bank)?.addEventListener('click', () => playCall());
     $('#cancelPay', bank)?.addEventListener('click', () => cancelByCustomer());
+    $('#cancelSoft', bank)?.addEventListener('click', async () => { c = await post(`/cases/${c.id}/cancel`, {}); drawAll(); });
+    $('#proceedSoft', bank)?.addEventListener('click', async () => { c = await post(`/cases/${c.id}/proceed`, {}); drawAll(); });
     $('#ackWarn', bank)?.addEventListener('click', () => { ui.warnAck = true; drawBank(); });
     $('#openCase', bank)?.addEventListener('click', () => go(`#/case/${c.id}/1`));
   }
   async function thumbs() { for (const img of bank.querySelectorAll('[data-thumb]')) { const s = allSpecs.scenario.find((x) => x.id === img.dataset.thumb); img.src = await pngOf(s); } }
 
   async function pay(fd) {
-    const p = { ...(scn?.payment || {}), payeeName: fd.get('payeeName'), payeeAccount: fd.get('payeeAccount'), payeeIFSC: fd.get('payeeIFSC'), rail: fd.get('rail'), amountINR: Number(fd.get('amountINR')), sessionSignals: { activeVideoCall: !!fd.get('activeVideoCall'), activeScreenShare: !!fd.get('activeScreenShare'), remoteAccessApp: !!fd.get('remoteAccessApp') } };
+    const p = { payeeName: fd.get('payeeName'), payeeAccount: fd.get('payeeAccount'), payeeIFSC: fd.get('payeeIFSC'), rail: fd.get('rail'), amountINR: Number(fd.get('amountINR')) };
     c = await post(`/cases/${c.id}/pay`, { payment: p });
     ui.lastRukoAt = Date.now();
     ui.spoken = 0;
@@ -337,7 +356,9 @@ export async function render(el, [caseId]) {
     const hi = state.lang === 'hi';
     if (!c.trigger) {
       reason.innerHTML = `<div class="card-head"><h3>${icon('cpu')}Agent reasoning</h3><span class="tiny muted">${hi ? 'फ़्रॉड डेस्क को दिखता है' : 'visible to the fraud desk'}</span></div>
-        <div class="callout info">${icon('info')}<span>${hi ? 'बैंक ऐप में <b>भेजें</b> दबाएँ। सबसे पहले ट्रिगर चलता है (सिर्फ़ कोड, AI नहीं): नया payee, रकम बनाम इतिहास, payee खाते की उम्र, सेशन संकेत, payee का नाम।' : 'Press <b>Pay</b> in the bank app. The trigger runs first (pure code, no AI): new payee, amount vs history, payee account age, session signals, payee name.'}</span></div>`;
+        <div class="group-h">${hi ? 'फ़ोन पर अभी (Ruko SDK, अपने-आप)' : 'On this phone now (Ruko SDK, automatic)'}</div>
+        <div class="sig-live">${[['activeCall', hi ? 'कॉल' : 'Call'], ['activeVideoCall', hi ? 'वीडियो कॉल' : 'Video call'], ['activeScreenShare', hi ? 'स्क्रीन शेयर' : 'Screen share'], ['remoteAccessApp', 'AnyDesk'], ['newDevice', hi ? 'नया फ़ोन' : 'New phone'], ['simChangeHours', hi ? 'SIM बदला' : 'SIM changed']].map(([k, l]) => { const on = !!(scn?.payment?.sessionSignals || {})[k]; return `<span class="sl ${on ? 'on' : ''}">${on ? '●' : '○'} ${l}</span>`; }).join('')}</div>
+        <div class="callout info">${icon('info')}<span>${hi ? '<b>भेजें</b> दबाते ही Ruko बैंक की तरफ़ से अपने-आप जाँचता है: प्राप्तकर्ता नया है या नहीं, उसका खाता कितना पुराना है, आपकी पिछली पेमेंट, आज कितना भेजा, FD टूटी या नहीं। ग्राहक से कुछ नहीं भरवाया जाता।' : 'When you press <b>Pay</b>, Ruko checks on the bank side by itself: is the payee new, how old is their account, your recent payments, how much went out today, any FD broken. The customer fills in nothing extra.'}</span></div>`;
       return;
     }
     const d = iv?.decision, sig = iv?.signals || {};
@@ -353,8 +374,10 @@ export async function render(el, [caseId]) {
       <div class="card-head"><h3>${icon('cpu')}Agent reasoning</h3><span class="pill ${sig.source === 'gemini' ? 'ok' : 'warn'}">${icon(sig.source === 'gemini' ? 'sparkles' : 'layers')}${sig.source === 'gemini' ? 'Gemini signals' : 'Rule signals'}</span></div>
       <div class="gauge-row">${gauge}<div class="thresholds">${TH.map((x, i) => `<div class="${i === band ? 'on' : ''}"><i style="background:${x[2]}"></i><span class="mono" style="width:34px">${x[0]}</span>${x[1]}</div>`).join('')}</div></div>
       <div style="margin-top:12px">${iv?.done ? outcomePill(iv.outcome, state.lang) : iv ? `<span class="pill">${icon('message')}${hi ? 'बातचीत जारी' : 'Interview in progress'} · ${iv.turns.filter((x) => x.role === 'customer').length}/8</span>` : ''}</div>
-      ${step(1, 'Trigger', hi ? 'कोड' : 'code')}
-      ${c.trigger.triggered ? c.trigger.reasons.map((r) => `<div class="sig on"><span class="ic-wrap">${icon('zap', { size: 13 })}</span><span>${esc(r.text)}</span></div>`).join('') : `<div class="sig good"><span class="ic-wrap">${icon('check', { size: 13 })}</span><span>${hi ? 'कोई ट्रिगर नहीं। बिना सवाल पेमेंट गया।' : 'No trigger. Sent without questions.'}</span></div>`}
+      ${step(1, hi ? 'रिस्क इंजन: पूरी यात्रा' : 'Risk engine: the whole journey', hi ? 'कोड' : 'code')}
+      ${c.risk?.detected ? `<div class="auto-facts">${[[hi ? 'प्राप्तकर्ता' : 'Payee', c.risk.detected.payeeIsNew ? (hi ? 'नया (पहली बार)' : 'new (first time)') : (hi ? 'पहले भेजा है' : 'paid before')], [hi ? 'उनका खाता' : 'Their account', c.risk.detected.payeeAccountAgeDays != null ? `${c.risk.detected.payeeAccountAgeDays} ${hi ? 'दिन पुराना' : 'days old'}${c.risk.detected.payeeBank ? ` · ${c.risk.detected.payeeBank}` : ''}` : (hi ? 'जानकारी नहीं' : 'not known')], [hi ? '90 दिन में सबसे बड़ी पेमेंट' : 'Largest in 90 days', inr(c.risk.detected.max90)], [hi ? 'आज की पिछली कोशिशें' : 'Earlier attempts today', c.risk.detected.paymentsToday], [hi ? 'फ़ोन पर' : 'On the phone', c.risk.detected.device.length ? c.risk.detected.device.map((k) => ({ activeCall: hi ? 'कॉल' : 'call', activeVideoCall: hi ? 'वीडियो कॉल' : 'video call', activeScreenShare: hi ? 'स्क्रीन शेयर' : 'screen share', remoteAccessApp: 'AnyDesk', accessibilityController: hi ? 'स्क्रीन चलाने वाला ऐप' : 'app controlling screen', newDevice: hi ? 'नया फ़ोन' : 'new phone', simChangeHours: hi ? 'SIM बदला' : 'SIM changed', sideloadedApp: 'APK' }[k] || k)).join(', ') : (hi ? 'कुछ ख़ास नहीं' : 'nothing unusual')]].map(([k, v]) => `<div><span class="tiny muted">${k}</span><b>${esc(String(v))}</b></div>`).join('')}<div class="tiny muted" style="grid-column:1/-1">${icon('shieldCheck', { size: 12 })} ${hi ? 'सब अपने-आप: बैंक लेजर, प्राप्तकर्ता बैंक डायरेक्टरी (डेमो में नकली), Ruko SDK' : 'All automatic: bank ledger, beneficiary-bank directory (mocked), Ruko SDK'}</div></div>` : ''}
+      ${c.risk ? c.risk.reasons.map((r) => `<div class="sig ${r.points > 0 ? 'on' : 'good'}"><span class="ic-wrap">${icon(r.points > 0 ? 'zap' : 'check', { size: 13 })}</span><span>${esc(r.label)} <b class="num" style="float:right">${r.points > 0 ? '+' : ''}${r.points}</b>${r.evidence ? `<span class="tiny muted" style="display:block">${esc(r.evidence)}</span>` : ''}</span></div>`).join('') + (c.risk.patterns || []).map((pt) => `<div class="sig on"><span class="ic-wrap">${icon('sparkles', { size: 13 })}</span><span><b>${esc(pt.name)}</b> · ${Math.round(pt.confidence * 100)}% <span class="tiny muted">(${esc(pt.source)})</span><span class="tiny muted" style="display:block">${esc(pt.why || '')}</span></span></div>`).join('') + (c.risk.journey ? `<div class="tiny muted" style="margin:6px 0">${icon('sparkles', { size: 12 })} Gemini: ${esc(c.risk.journey.story)}</div>` : '') : c.trigger.triggered ? c.trigger.reasons.map((r) => `<div class="sig on"><span class="ic-wrap">${icon('zap', { size: 13 })}</span><span>${esc(r.text)}</span></div>`).join('') : `<div class="sig good"><span class="ic-wrap">${icon('check', { size: 13 })}</span><span>${hi ? 'कोई ट्रिगर नहीं। बिना सवाल पेमेंट गया।' : 'No trigger. Sent without questions.'}</span></div>`}
+      ${c.risk ? `<div class="risk-mini"><span class="pill ${c.risk.tier >= 4 ? 'bad' : c.risk.tier >= 2 ? 'warn' : 'ok'}">T${c.risk.tier} · ${esc(c.risk.name)}</span><span class="tiny muted">${hi ? 'रिस्क इंजन, स्कोर' : 'Risk engine, score'} ${c.risk.score}${c.risk.floors.length ? ` · ${hi ? 'न्यूनतम' : 'floor'}: ${esc(c.risk.floors[0].label)}` : ''}</span></div>` : ''}
       ${iv ? `
       ${step(2, hi ? 'ग्राहक के अपने शब्द' : 'Signals, in the customer\'s words', sig.source === 'gemini' ? 'gemini + quote check' : 'rules')}
       ${SIGNALS.map(([k, en, hiL]) => { const v = sig[k]; const on = v?.value; const fresh = on && !ui.prevOn.has(k) ? ' fresh' : ''; return `<div class="sig ${on ? 'on' : 'off'}${fresh}"><span class="ic-wrap">${on ? icon('alert', { size: 13 }) : ''}</span><span>${hi ? hiL : en}${on && (v.quote || v.reason) ? `<q>${esc(v.quote || v.reason)}</q>` : ''}${k === 'authorityClaimed' && on && v.agency ? ` <span class="pill bad">${esc(v.agency)}</span>` : ''}</span></div>`; }).join('')}
@@ -406,6 +429,19 @@ export async function render(el, [caseId]) {
       await send(r.text, files);
     }
     await idle();
+    // The rest of the story, end to end: the son is told, calls, advises; the customer cancels;
+    // the case opens with everything already captured, ready to report.
+    if (c.hold?.status === 'active' && c.trustedContacts?.length) {
+      const hiL = state.lang === 'hi';
+      await sleep(2000);
+      ui.tpView = 'sms'; drawTrust(); ping(); await sleep(3500);
+      await playCall(); await idle(); await sleep(1200);
+      await adviseByContact('scam'); await idle(); await sleep(2500);
+      await cancelByCustomer(); await idle(); await sleep(3000);
+      toast(hiL ? 'केस फ़ाइल खुल रही है: सब पहले से दर्ज है' : 'Opening the case file: everything is already captured');
+      await sleep(1800);
+      go(`#/case/${c.id}/1`);
+    }
   }
   $('#auto', el).addEventListener('click', autoplay);
   // Keep the phone's speaker icons in sync when sound is toggled from the top bar or palette.

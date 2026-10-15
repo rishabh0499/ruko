@@ -28,6 +28,8 @@ export function caseStatus(c, lang = 'en') {
   const hi = lang === 'hi';
   const S = (en, h, tone) => ({ label: hi ? h : en, tone });
   if (c.door === 'frozen_holder') return c.docs ? S('Release papers drafted', 'रिलीज़ के कागज़ तैयार', 'info') : S('Frozen account: building the case', 'फ़्रीज़ खाता: केस बन रहा है', 'info');
+  if (c.complaint) return S('Complaint filed (1930)', 'शिकायत दर्ज (1930)', 'info');
+  if (c.paymentStatus === 'stopped') return S('Stopped by the bank', 'बैंक ने रोका', 'ok');
   if (c.paymentStatus === 'cancelled') return S('Cancelled by the customer', 'ग्राहक ने रद्द किया', 'ok');
   if (c.paymentStatus === 'held') return S('On hold (24 h)', 'रोका गया (24 घंटे)', 'warn');
   if (c.paymentStatus === 'pending_check') return S('Ruko is checking', 'Ruko जाँच रहा है', 'warn');

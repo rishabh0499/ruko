@@ -117,3 +117,19 @@ test('semantic script matching: off when offline, keyword matches win on merge',
   const m = mergeScriptMatches(kw, sem);
   assert.deepEqual(m.map((x) => `${x.scriptId}:${x.method}`), ['S01:keyword', 'S02:semantic']);
 });
+
+test('simulator stories open real cases that the desk and officer view list, with the complaint', async () => {
+  const { createApp } = await import('../lib/app.js');
+  let db = null;
+  const app = createApp({ loadDb: () => db, saveDb: (d) => { db = d; }, putEvidence() {}, getEvidenceDataUrl: () => '', getEvidenceBytes: () => null, evidenceUrl: () => '', deleteEvidence() {}, synth: async () => null, prewarm: () => 0, voices: {} });
+  const call = async (m, p, b) => (await app.handle({ ip: '127.0.0.1', method: m, path: p, rawUrl: p, headers: {} }, b || {})).json;
+  const c = await call('POST', '/api/switch/case', { streamId: 'D' });
+  assert.equal(c.moneyTrail.totals.lost, 19998);
+  const f = await call('POST', '/api/switch/case/' + c.id + '/file');
+  assert.ok(/^3101\d{9}$/.test(f.complaint.ack));
+  const again = await call('POST', '/api/switch/case/' + c.id + '/file');
+  assert.equal(again.complaint.ack, f.complaint.ack, 'filing twice keeps one complaint');
+  const row = (await call('GET', '/api/cases')).find((r) => r.id === c.id);
+  assert.equal(row.complaint, f.complaint.ack);
+  assert.equal(row.lostINR, 19998);
+});

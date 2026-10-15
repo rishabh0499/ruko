@@ -62,6 +62,26 @@ Models are **fallback chains** in `.env` (`GEMINI_MODEL_FAST`, `GEMINI_MODEL_PRO
 
 Tests: `npm test` (decider, validator, trigger, working days, and the 44-case eval set as a regression test).
 
+## Risk engine: every rail, the whole journey
+
+Scams do not only arrive as one large transfer in the bank app. People are asked to send ₹10,000 five times on PhonePe, pay a "trading desk" more every week, open an APK that hands the account to someone else, break an FD and RTGS from the branch, or let a fake helpline run AnyDesk during a card payment. `lib/risk.js` scores **every payment on every rail** (bank app, UPI apps via the bank's UPI switch, card authorisation, net banking, branch) from the customer's recent journey, not the single amount.
+
+| Tier | What happens | Typical cause |
+|---|---|---|
+| T0 Silent | Nothing shown | Ordinary payment, trusted payee, purpose already checked |
+| T1 Nudge | One warning screen for this scam type | New payee, nothing else |
+| T2 Cooling-off | Queued 30 min, cancellable | ₹25k+ to new payees in 24 h, savings broken, first big payment |
+| T3 Conversation | Ruko's 2–4 questions | Call + new payee + ₹10k, a strong journey pattern |
+| T4 Hold + trusted contact | 24 h hold | Screen share or remote access, video call, splitting detected |
+| T5 Fraud desk | Bank calls the registered number | Payee on the suspect list, account takeover (no interview: the payer may not be the customer) |
+
+- **Rolling totals beat splitting:** sums to new payees over 24 h and 7 days, payment counts and near-identical amounts. ₹10,000 × 5 is warned twice and held at the third.
+- **A call alone proves nothing** (+15 points). It matters with a new payee and a real amount, and most when it is a video call or from a reported number.
+- **Journey patterns** (`lib/patterns.js`): investment trajectory, task scam, savings broken before a transfer, blackmail, splitting, takeover. Each cites the transaction ids it used.
+- **Gemini journey analyst** (`lib/journey.js`): reads the ledger, names the pattern with evidence ids, writes the staff summary, the warning for this specific scam and the one question worth asking. Code verifies every id; a Gemini-only finding needs at least two cited payments to add points and can never force a tier.
+- **Low friction:** trusted payees and purposes already checked lower the score; most payments end at T0. On the synthetic streams: 0% of honest payments asked anything, 5/5 scam journeys stopped, about 98% of scam money stopped before it left (Evaluation page; team-written streams, not field data).
+- Device, telecom (FRI), Suspect Registry and payment-stream data are simulated for the demo.
+
 ## Trusted contact and the customer's choice
 
 When a payment is held, the trusted contact's phone gets the SMS. They can **call** the customer and send **advice**: "It is a scam" or "I know about it". They cannot cancel anything.

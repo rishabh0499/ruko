@@ -12,6 +12,8 @@ export async function render(el) {
     <div class="card"><div class="card-head"><h3 style="margin:0">Interview agent</h3>
       <div class="row"><button class="btn primary" id="runOff" type="button">Re-run (offline rules)</button><button class="btn" id="runGem" type="button" ${app.config.aiMode === 'gemini' && !app.config.static ? '' : `disabled title="${app.config.static ? 'Disabled in the shared demo to protect viewers\' usage' : 'Needs GEMINI_API_KEY'}"`}>Run with Gemini (sample of 12)</button></div></div>
       <div id="iv"><p class="muted small">Running the offline evaluation…</p></div></div>
+    <div class="card" style="margin-top:16px"><div class="card-head"><h3 style="margin:0">Risk engine: friction vs protection</h3><a class="btn sm" href="#/risk">Open Risk Engine</a></div>
+      <div id="rk"><p class="muted small">Scoring every payment stream…</p></div></div>
     <div class="card" style="margin-top:16px"><div class="card-head"><h3 style="margin:0">Evidence extraction</h3><button class="btn" id="runEx" type="button" ${app.config.aiMode === 'gemini' && !app.config.static ? '' : 'disabled'}>Run extraction eval (30 items)</button></div>
       <div id="ex">${app.config.aiMode === 'gemini' ? '<p class="muted small">Not run yet. Each item is rendered in your browser and sent to Gemini; results are scored against ground truth.</p>' : '<div class="callout warn small">Needs a Gemini key. In offline mode the reader returns the stored ground truth for sample files, so scoring it would only measure itself. We do not show a number we did not earn.</div>'}</div></div>`;
 
@@ -40,6 +42,19 @@ export async function render(el) {
   $('#runOff', el).addEventListener('click', () => runIv(false));
   // Offline rules take well under a second: show the numbers on arrival instead of an empty card.
   runIv(false);
+  (async () => {
+    const r = await post('/eval/risk', {});
+    const m = r.metrics, pct = (x) => `${Math.round(x * 1000) / 10}%`;
+    $('#rk', el).innerHTML = `<div class="grid g3" style="margin:6px 0 14px">
+        <div class="kpi"><div class="num" style="color:var(--ok)">${pct(m.honestAskedPct)}</div><div class="lbl">Honest payments that got questions (T3+)</div></div>
+        <div class="kpi"><div class="num">${pct(m.honestTouchedPct)}</div><div class="lbl">Honest payments that saw any friction (T1+)</div></div>
+        <div class="kpi"><div class="num" style="color:var(--ok)">${m.scamStreamsCaught}</div><div class="lbl">Scam journeys stopped (T3+)</div></div>
+        <div class="kpi"><div class="num">${pct(m.valueProtectedPct)}</div><div class="lbl">Scam money stopped before it left</div></div>
+        <div class="kpi"><div class="num">${m.expectedMatch}</div><div class="lbl">Payments scored in the expected tier</div></div>
+      </div>
+      <div class="callout warn small" style="margin-bottom:12px">${esc(r.caveat)}</div>
+      <div class="tablewrap"><table class="t"><thead><tr><th>Journey</th><th>Stopped at</th><th>Lost before</th><th>Protected</th></tr></thead><tbody>${r.catches.map((c) => `<tr><td class="mono">${c.stream}</td><td>${c.caughtAt ? `payment ${c.caughtAt} of ${c.of}` : '<span style="color:var(--bad)">missed</span>'}</td><td>₹${c.lostBeforeINR.toLocaleString('en-IN')}</td><td>₹${c.protectedINR.toLocaleString('en-IN')}</td></tr>`).join('')}</tbody></table></div>`;
+  })().catch((e) => { $('#rk', el).innerHTML = `<p class="small" style="color:var(--bad)">${esc(e.message)}</p>`; });
   $('#runGem', el).addEventListener('click', () => runIv(true));
 
   $('#runEx', el).addEventListener('click', async () => {

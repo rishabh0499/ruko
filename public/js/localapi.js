@@ -31,13 +31,13 @@ const platform = {
     return browserTts(speaker, t);
   },
   prewarm: () => 0,
-  voices: { ruko: 1, sunita: 1, amit: 1, rakesh: 1, imran: 1 },
+  voices: { ruko: 1, sunita: 1, amit: 1, rakesh: 1, imran: 1, scammer: 1, meena: 1, vikram: 1, ramesh: 1, kamala: 1, pooja: 1, son: 1, bank: 1, teller: 1 },
 };
 
 // ---------- Gemini TTS from the browser (website build only) ----------
 const KEY = globalThis.RUKO_ENV?.GEMINI_API_KEY || '';
 const TTS_MODELS = (globalThis.RUKO_ENV?.GEMINI_MODEL_TTS || 'gemini-3.8-flash-tts,gemini-3.1-flash-tts-preview,gemini-2.5-flash-preview-tts,gemini-3.8-flash-lite-tts').split(',');
-const VOICE = { ruko: 'Kore', sunita: 'Gacrux', amit: 'Orus', rakesh: 'Charon', imran: 'Iapetus' };
+const VOICE = { ruko: 'Kore', sunita: 'Gacrux', amit: 'Orus', rakesh: 'Charon', imran: 'Iapetus', scammer: 'Fenrir', meena: 'Leda', vikram: 'Puck', ramesh: 'Algenib', kamala: 'Sulafat', pooja: 'Aoede', son: 'Orus', bank: 'Schedar', teller: 'Despina' };
 const ttsCache = new Map();
 const cool = new Map();
 function wav(pcm, rate) {

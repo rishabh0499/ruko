@@ -58,6 +58,15 @@ const PREFS = {
     amit: ['Rishi', 'Google UK English Male', 'Daniel'],
     rakesh: ['Daniel', 'Google UK English Male', 'Rishi'],
     imran: ['Rishi', 'Google UK English Male', 'Daniel'],
+    scammer: ['Daniel', 'Google UK English Male', 'Rishi'],
+    meena: ['Veena', 'Isha', 'Samantha'],
+    vikram: ['Rishi', 'Google UK English Male', 'Daniel'],
+    ramesh: ['Google UK English Male', 'Daniel', 'Rishi'],
+    kamala: ['Moira', 'Veena', 'Tessa'],
+    pooja: ['Isha', 'Samantha', 'Veena'],
+    son: ['Rishi', 'Google UK English Male', 'Daniel'],
+    bank: ['Karen', 'Google UK English Female', 'Samantha'],
+    teller: ['Tessa', 'Moira', 'Samantha'],
   },
   hi: {
     ruko: ['Google हिन्दी', 'Lekha'],
@@ -65,6 +74,7 @@ const PREFS = {
     amit: ['Google हिन्दी', 'Lekha'],
     rakesh: ['Google हिन्दी', 'Lekha'],
     imran: ['Google हिन्दी', 'Lekha'],
+    scammer: ['Google हिन्दी', 'Lekha'], meena: ['Lekha', 'Google हिन्दी'], vikram: ['Google हिन्दी', 'Lekha'], ramesh: ['Google हिन्दी', 'Lekha'], kamala: ['Lekha', 'Google हिन्दी'], pooja: ['Lekha', 'Google हिन्दी'], son: ['Google हिन्दी', 'Lekha'], bank: ['Lekha', 'Google हिन्दी'], teller: ['Lekha', 'Google हिन्दी'],
   },
 };
 export function pickVoice(lang, speaker) {
@@ -85,7 +95,7 @@ function speakBrowser(text, lang, speaker, myEpoch, onStart) {
     const u = new SpeechSynthesisUtterance(text);
     const v = pickVoice(l, speaker);
     if (v) { u.voice = v; u.lang = v.lang; } else u.lang = l === 'hi' ? 'hi-IN' : 'en-IN';
-    u.rate = speaker === 'sunita' ? 0.95 : 1;
+    u.rate = { sunita: 0.95, kamala: 0.9, meena: 0.95, scammer: 1.08, bank: 0.98 }[speaker] || 1;
     u.pitch = 1;
     const safety = setTimeout(resolve, 2500 + text.length * 110); // speechSynthesis sometimes never fires onend
     u.onend = () => { clearTimeout(safety); resolve(); };
