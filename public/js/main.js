@@ -58,9 +58,10 @@ async function render() {
   document.title = `${title} · Ruko`;
   const view = $('#view');
   try {
+    // Keep a visible loading state while the screen and its data load, never a blank area.
+    if (!view.querySelector('.boot')) view.innerHTML = '<div class="boot" role="status"><span class="spinner" aria-hidden="true"></span>Loading…</div>';
     const mod = await screens[key]();
     view.classList.remove('enter');
-    view.innerHTML = '';
     app.cleanup = (await mod.render(view, rest.filter(Boolean))) || null;
     void view.offsetWidth; view.classList.add('enter');
   } catch (e) {

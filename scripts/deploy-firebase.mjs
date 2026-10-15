@@ -58,6 +58,10 @@ const version = await call('POST', `${API}/sites/${SITE}/versions`, {
   config: {
     headers: [
       { glob: '**/*.@(js|css)', headers: { 'Cache-Control': 'no-cache' } },
+      // The page itself must never be cached for an hour (Firebase's default), or visitors keep an
+      // old index.html that no longer matches the newly deployed modules.
+      { glob: '/', headers: { 'Cache-Control': 'no-cache' } },
+      { glob: '**/*.html', headers: { 'Cache-Control': 'no-cache' } },
       { glob: '/tts/**', headers: { 'Cache-Control': 'public, max-age=604800' } },
       { glob: '**', headers: SECURITY },
     ],
