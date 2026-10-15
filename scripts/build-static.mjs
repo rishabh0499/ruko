@@ -55,7 +55,18 @@ if (TARGET === 'web') {
   };
   for (const k of Object.keys(RUKO_ENV)) if (!RUKO_ENV[k]) delete RUKO_ENV[k];
   if (!RUKO_ENV.GEMINI_API_KEY) console.warn('WEB_GEMINI_API_KEY is not set in .env: the website will run in offline rules mode.');
+  // Preload the whole module graph the first screen needs, so the browser fetches it in parallel
+  // instead of discovering one import per round trip (that waterfall cost 5+ seconds on Firebase).
+  const graph = new Set();
+  const visit = (rel) => {
+    if (graph.has(rel) || !existsSync(join(OUT, rel))) return;
+    graph.add(rel);
+    for (const m of readFileSync(join(OUT, rel), 'utf8').matchAll(/import\s[^'"]*?from\s*['"](\.{1,2}\/[^'"]+)['"]/g)) visit(join(dirname(rel), m[1]).split('\\').join('/'));
+  };
+  ['public/js/main.js', 'public/js/localapi.js', 'public/js/screens/hub.js'].forEach(visit);
+  const preload = [...graph].map((f) => `<link rel="modulepreload" href="${f}">`).join('\n');
   const page = html
+    .replace('</head>', `${preload}\n</head>`)
     .replace('href="/css/app.css"', 'href="public/css/app.css"')
     .replace('<script type="module" src="/js/main.js"></script>', `<script>window.RUKO_STATIC = true; window.RUKO_ENV = ${JSON.stringify(RUKO_ENV)};</script>\n<script type="module" src="public/js/main.js"></script>`);
   writeFileSync(join(OUT, 'index.html'), page);

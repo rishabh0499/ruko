@@ -634,3 +634,4 @@ table.t td { padding: 12px 14px; }
 .seg { max-width: 100%; flex-wrap: wrap; }
 .seg button { white-space: nowrap; }
 @media (max-width: 600px) { .page-head .actions, .page-head .actions input { width: 100%; } }
+.boot { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 50vh; color: var(--muted); font-weight: 500; }
