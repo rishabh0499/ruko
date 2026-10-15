@@ -1,6 +1,6 @@
 import { get, post } from '../api.js';
 import { dictate } from '../dictate.js';
-import { $, esc, inr, sleep, time, OUTCOME, outcomePill, mocked, toast, fileToDataUrl } from '../ui.js';
+import { $, esc, inr, sleep, time, OUTCOME, outcomePill, mocked, toast, fileToDataUrl, emptyState } from '../ui.js';
 import { t, tl, state } from '../i18n.js';
 import { go } from '../main.js';
 import { evidencePayload, specs, pngOf } from '../evidence-render.js';
@@ -24,7 +24,14 @@ export async function render(el, [caseId]) {
   caseId = caseId || localStorage.getItem('ruko_case');
   let c = caseId ? await get(`/cases/${caseId}`).catch(() => null) : null;
   if (!c || c.door === 'frozen_holder') {
-    el.innerHTML = `<div class="card" style="max-width:640px"><h2>${state.lang === 'hi' ? 'पहले एक सीन चुनें' : 'Pick a scenario first'}</h2><p class="muted">${state.lang === 'hi' ? 'भारत बैंक ऐप एक सीन के ग्राहक के साथ खुलता है।' : 'The Bharat Bank app opens with a scenario customer.'}</p><div class="row"><button class="btn primary" data-s="A" type="button">Scenario A · scam</button><button class="btn" data-s="B" type="button">Scenario B · legit</button></div></div>`;
+    const hi = state.lang === 'hi';
+    el.innerHTML = emptyState({
+      ic: 'bank',
+      title: hi ? 'भारत बैंक ऐप, Ruko के साथ' : 'The Bharat Bank app, with Ruko inside',
+      body: hi ? 'एक ग्राहक चुनें और बड़ा ट्रांसफ़र करें। Ruko पेमेंट के पल पर बीच में आता है, सवाल पूछता है, और ज़रूरत हो तो पेमेंट रोकता है।' : 'Pick a customer and make a large transfer. Ruko steps in at the moment of payment, asks a few questions, and holds the payment if it needs to.',
+      actions: `<button class="btn primary lg" data-s="A" type="button">${hi ? 'सीन A: स्कैम' : 'Scenario A: a scam'}${icon('arrowRight', { size: 16 })}</button><button class="btn lg" data-s="B" type="button">${hi ? 'सीन B: असली पेमेंट' : 'Scenario B: a real payment'}</button>`,
+      steps: hi ? ['पेमेंट भरें', 'Ruko के सवालों के जवाब दें', 'फ़ैसला और कारण देखें'] : ['Fill in the payment', "Answer Ruko's questions", 'See the decision and why'],
+    });
     el.querySelectorAll('[data-s]').forEach((b) => b.addEventListener('click', () => startScenario(b.dataset.s)));
     return;
   }

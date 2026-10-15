@@ -1,4 +1,4 @@
-import { esc } from '../ui.js';
+import { esc, pageHead } from '../ui.js';
 import { specs, pngOf } from '../evidence-render.js';
 import { groundTruth } from '../shared/evidence.js';
 
@@ -7,8 +7,8 @@ export async function render(el) {
   const list = [...all.scenario, ...all.extraction];
   let showBoxes = true;
   const draw = async () => {
-    el.innerHTML = `<div class="row between" style="margin-bottom:12px"><div><h2 style="margin:0">Evidence Studio</h2><div class="small muted">No public dataset of Indian UPI screenshots or scam WhatsApp threads exists, so the demo and the extraction test set are generated here. Each image carries its ground truth (value + source box). All synthetic.</div></div>
-      <label class="switch"><input type="checkbox" id="bx" ${showBoxes ? 'checked' : ''}> Show ground-truth boxes</label></div>
+    el.innerHTML = `${pageHead({ eyebrow: 'For judges', title: 'Evidence Studio', desc: 'No public dataset of Indian UPI screenshots or scam WhatsApp threads exists, so the demo and the extraction test set are generated here. Each image carries its ground truth (value + source box). All synthetic.' })}
+      <label class="switch"><input type="checkbox" id="bx" ${showBoxes ? 'checked' : ''}> Show ground-truth boxes</label>
       <div class="group-h">Scenario evidence</div><div class="ev-grid" id="g1"></div>
       <div class="group-h">Extraction test set (30 · en / hi / ta · 5 hard cases)</div><div class="ev-grid" id="g2"></div>`;
     el.querySelector('#bx').addEventListener('change', (e) => { showBoxes = e.target.checked; draw(); });

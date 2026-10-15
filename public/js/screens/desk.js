@@ -1,25 +1,35 @@
 import { get, post } from '../api.js';
-import { $, esc, inr, dt, outcomePill, toast, mocked } from '../ui.js';
+import { $, esc, inr, dt, outcomePill, toast, mocked, pageHead, emptyState, statusPill, STAGE } from '../ui.js';
 import { go } from '../main.js';
 import { icon } from '../icons.js';
 
 export async function render(el, [caseId]) {
   const cases = await get('/cases');
   if (!caseId) {
-    const open = cases.filter((c) => c.queue);
+    const held = cases.filter((c) => c.paymentStatus === 'held');
+    const lost = cases.filter((c) => c.paymentStatus === 'sent' && c.overridden);
+    const FILTERS = [['', 'All', cases.length], ['escalated', 'Escalated', cases.filter((c) => c.queue === 'escalated').length], ['held', 'On hold', held.length], ['lost', 'Sent after warning', lost.length], ['closed', 'Closed', cases.filter((c) => ['cancelled', 'sent'].includes(c.paymentStatus) && !c.overridden).length]];
     el.innerHTML = `
-      <div class="row between" style="margin-bottom:16px"><div><h2 style="margin:0">Fraud Desk</h2><div class="small muted">Bank staff console. Every hold and escalation lands here with the agent's reasoning.</div></div><div class="row"><select id="f" style="width:auto"><option value="">All cases</option><option value="escalated">Escalated</option><option value="held">Held</option><option value="sent">Sent / closed</option></select></div></div>
-      <div class="grid g4" style="margin-bottom:18px">
-        <div class="card kpi"><div class="num">${cases.length}</div><div class="lbl">Cases</div></div>
-        <div class="card kpi"><div class="num" style="color:var(--bad)">${cases.filter((c) => c.queue === 'escalated').length}</div><div class="lbl">Escalated</div></div>
-        <div class="card kpi"><div class="num" style="color:var(--warn)">${cases.filter((c) => c.paymentStatus === 'held').length}</div><div class="lbl">Payments on hold</div></div>
-        <div class="card kpi"><div class="num">${inr(cases.filter((c) => c.paymentStatus === 'held').reduce((s, c) => s + (c.amountINR || 0), 0))}</div><div class="lbl">Value on hold</div></div>
-      </div>
-      <div class="tablewrap"><table class="t" id="tbl"><thead><tr><th>Case</th><th>Customer</th><th>Amount</th><th>Outcome</th><th>Score</th><th>Payment</th><th>Stage</th></tr></thead><tbody>
-        ${cases.map((c) => `<tr class="click" data-id="${c.id}" data-q="${c.queue || ''}" data-p="${c.paymentStatus}"><td class="mono">${c.id}<div class="tiny muted">${dt(c.createdAt)}</div></td><td>${esc(c.name)}${c.door === 'frozen_holder' ? ' <span class="pill info">frozen-holder</span>' : ''}</td><td>${inr(c.amountINR)}</td><td>${outcomePill(c.outcome)}</td><td>${c.score ?? '—'}</td><td>${esc(c.paymentStatus)}</td><td>${esc(c.stage)}</td></tr>`).join('') || '<tr><td colspan="7" class="muted">No cases yet. Run a scenario from the Demo Hub.</td></tr>'}
-      </tbody></table></div>`;
-    el.querySelectorAll('[data-id]').forEach((r) => r.addEventListener('click', () => go(`#/desk/${r.dataset.id}`)));
-    $('#f', el).addEventListener('change', (e) => { const v = e.target.value; el.querySelectorAll('#tbl tbody tr').forEach((r) => { r.style.display = !v || r.dataset.q === v || (v === 'sent' && r.dataset.p === 'sent') ? '' : 'none'; }); });
+      ${pageHead({ eyebrow: 'Bank staff', title: 'Fraud Desk', desc: "Every hold and escalation lands here with Ruko's reasoning, the transcript and the evidence.", actions: '<input id="q" type="search" placeholder="Search name or case" aria-label="Search cases" style="width:240px">' })}
+      <section class="stats-band desk-kpis">
+        <div><div class="num">${cases.length}</div><div class="lbl">Cases</div></div>
+        <div><div class="num" style="color:var(--bad)">${cases.filter((c) => c.queue === 'escalated').length}</div><div class="lbl">Escalated to the desk</div></div>
+        <div><div class="num" style="color:var(--warn)">${held.length}</div><div class="lbl">Payments on hold</div></div>
+        <div><div class="num">${inr(held.reduce((s, c) => s + (c.amountINR || 0), 0))}</div><div class="lbl">Money on hold</div></div>
+      </section>
+      <div class="seg" role="radiogroup" aria-label="Filter cases" id="f" style="margin:var(--s5) 0 var(--s3)">${FILTERS.map(([k, l, n]) => `<button type="button" role="radio" data-k="${k}" class="${k ? '' : 'on'}" aria-checked="${!k}">${l} <span class="muted">${n}</span></button>`).join('')}</div>
+      ${cases.length ? `<div class="tablewrap"><table class="t" id="tbl"><thead><tr><th>Case</th><th>Customer</th><th>Amount</th><th>Ruko's decision</th><th title="Risk score from the interview. 9 or more means hold.">Risk</th><th>Status</th><th>Step</th></tr></thead><tbody>
+        ${cases.map((c) => {
+          const k = [c.queue === 'escalated' && 'escalated', c.paymentStatus === 'held' && 'held', c.paymentStatus === 'sent' && c.overridden && 'lost', ['cancelled', 'sent'].includes(c.paymentStatus) && !c.overridden && 'closed'].filter(Boolean).join(' ');
+          return `<tr class="click" tabindex="0" data-id="${c.id}" data-k="${k}" data-s="${esc(`${c.id} ${c.name}`.toLowerCase())}"><td class="mono" style="white-space:nowrap">${c.id}<div class="tiny muted">${dt(c.createdAt)}</div></td><td><b style="font-weight:600">${esc(c.name)}</b>${c.door === 'frozen_holder' ? '<div class="tiny muted">Frozen account holder</div>' : ''}</td><td>${c.amountINR ? inr(c.amountINR) : '<span class="muted">—</span>'}</td><td>${c.outcome ? outcomePill(c.outcome) : '<span class="muted small">No check</span>'}</td><td>${c.score ?? '<span class="muted">—</span>'}</td><td>${statusPill(c)}</td><td class="small">${esc(STAGE[c.stage] || c.stage)}</td></tr>`;
+        }).join('')}
+      </tbody></table></div>` : emptyState({ ic: 'desk', title: 'No cases yet', body: 'When Ruko holds or escalates a payment, the case shows up here with the reasoning and the evidence.', actions: '<a class="btn primary" href="#/">Run a scenario</a>' })}`;
+    const rows = [...el.querySelectorAll('#tbl tbody tr')];
+    let k = '', q = '';
+    const apply = () => rows.forEach((r) => { r.style.display = (!k || r.dataset.k.split(' ').includes(k)) && (!q || r.dataset.s.includes(q)) ? '' : 'none'; });
+    rows.forEach((r) => { r.addEventListener('click', () => go(`#/desk/${r.dataset.id}`)); r.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(`#/desk/${r.dataset.id}`); }); });
+    el.querySelectorAll('#f [data-k]').forEach((b) => b.addEventListener('click', () => { k = b.dataset.k; el.querySelectorAll('#f [data-k]').forEach((x) => { x.classList.toggle('on', x === b); x.setAttribute('aria-checked', x === b); }); apply(); }));
+    $('#q', el).addEventListener('input', (e) => { q = e.target.value.trim().toLowerCase(); apply(); });
     return;
   }
   let c = await get(`/cases/${caseId}`);

@@ -1,5 +1,5 @@
 import { get } from '../api.js';
-import { $, esc, inr, dt, outcomePill, mocked } from '../ui.js';
+import { $, esc, inr, dt, outcomePill, mocked, pageHead } from '../ui.js';
 import { go } from '../main.js';
 import { icon } from '../icons.js';
 
@@ -36,8 +36,7 @@ async function renderList(el) {
   const resolved = cases.filter((c) => c.r.resolved).length;
   el.innerHTML = `
     ${banner}
-    <div class="row between" style="margin-bottom:16px;align-items:flex-end"><div><div class="eyebrow">Police</div><h2 style="margin:4px 0 0">Officer View</h2><div class="small muted">Every case Ruko opened: what happened, how it happened, and what the police can act on.</div></div>
-      <div class="row"><input id="q" type="search" placeholder="Search case, name, city" aria-label="Search cases" style="width:220px"></div></div>
+    ${pageHead({ eyebrow: 'Police', title: 'Officer View', desc: 'Every case Ruko opened: what happened, how it happened, and what the police can act on.', actions: '<input id="q" type="search" placeholder="Search case, name, city" aria-label="Search cases" style="width:240px">' })}
     <section class="stats-band officer-kpis">
       <div><div class="num">${cases.length}</div><div class="lbl">Cases · ${resolved} need no police action</div></div>
       <div><div class="num" style="color:var(--ok)">${prevented.length}</div><div class="lbl">Prevented · ${inr(sum(prevented, (c) => c.amountINR))} kept</div></div>

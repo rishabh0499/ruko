@@ -39,7 +39,7 @@ export async function refreshConfig() {
   const live = app.config.aiMode === 'gemini';
   p.className = 'ai-chip' + (live ? ' live' : '');
   p.innerHTML = `<span class="dot" aria-hidden="true"></span>${live ? 'Gemini live' : app.config.static ? 'Offline demo' : 'Offline rules'}${live ? ` <span class="model">${esc(app.config.models.fast)}</span>` : ''}`;
-  p.title = live ? 'Live Gemini calls with model fallback and cached responses' : app.config.static ? 'Shareable demo: runs fully in your browser with the offline rules engine' : 'No GEMINI_API_KEY: deterministic rules and cached responses';
+  p.title = live ? `Live Gemini (${app.config.models.fast}) with model fallback and cached responses` : app.config.static ? 'Shareable demo: runs fully in your browser with the offline rules engine' : 'No GEMINI_API_KEY: deterministic rules and cached responses';
 }
 
 function applyI18n() {
@@ -151,10 +151,16 @@ export function setTheme(pref) {
   try { localStorage.setItem('ruko_theme', pref); } catch {}
   const dark = pref === 'dark' || (pref === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0a0e16' : '#f5f3ee');
-  $$('[data-theme-opt]').forEach((b) => { const on = b.dataset.themeOpt === pref; b.classList.toggle('on', on); b.setAttribute('aria-checked', on); });
+  const b = $('#themeBtn');
+  if (b) {
+    const name = { light: 'Light', dark: 'Dark', system: 'Auto (follows your device)' }[pref] || 'Auto';
+    b.innerHTML = icon(pref === 'light' ? 'sun' : pref === 'dark' ? 'moon' : 'monitor');
+    b.title = `Theme: ${name}. Click to change.`; b.setAttribute('aria-label', `Theme: ${name}. Click to change.`);
+  }
 }
+const THEME_ORDER = ['light', 'dark', 'system'];
 $$('[data-lang]').forEach((b) => b.addEventListener('click', () => { setLang(b.dataset.lang); render(); }));
-$$('[data-theme-opt]').forEach((b) => b.addEventListener('click', () => setTheme(b.dataset.themeOpt)));
+$('#themeBtn').addEventListener('click', () => setTheme(THEME_ORDER[(THEME_ORDER.indexOf(currentThemePref()) + 1) % THEME_ORDER.length]));
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (currentThemePref() === 'system') setTheme('system'); });
 $('#tourBtn').addEventListener('click', () => startTour());
 $('#palBtn').addEventListener('click', openPalette);

@@ -1,5 +1,5 @@
 import { get } from '../api.js';
-import { esc } from '../ui.js';
+import { esc, pageHead } from '../ui.js';
 import { app } from '../main.js';
 
 export async function render(el) {
@@ -8,8 +8,8 @@ export async function render(el) {
   const row = (what, how, status) => `<tr><td><b>${what}</b></td><td class="small">${how}</td><td>${status}</td></tr>`;
   const R = '<span class="pill ok">Real</span>', G = gem ? '<span class="pill ok">Real (Gemini)</span>' : '<span class="pill warn">Real code · cached AI</span>', M = '<span class="pill warn">Mocked</span>', S = '<span class="pill info">Synthetic</span>';
   el.innerHTML = `
-    <h2>Real vs Mocked</h2>
-    ${app.config.static ? `<div class="callout warn" style="margin-bottom:14px;max-width:860px"><span><b>You are viewing the shareable offline build.</b> The same application code runs inside your browser instead of on a server. Rows marked "Real (Gemini)" use the offline rules engine and stored sample results here; voices that were generated with Gemini TTS are included as audio files.</span></div>` : ''}<p class="muted" style="max-width:860px">Judges asked teams to be explicit. This is everything in the demo, and what it really is. AI mode right now: <b>${gem ? `Gemini (${esc(app.config.models.fast)} / ${esc(app.config.models.pro)})` : 'offline rules (no API key)'}</b>.</p>
+    ${pageHead({ eyebrow: 'For judges', title: 'Real vs Mocked', desc: `Everything in the demo, and what it really is. AI right now: <b>${gem ? `Gemini (${esc(app.config.models.fast)})` : 'offline rules (no API key)'}</b>.` })}
+    ${app.config.static ? `<div class="callout warn" style="margin-bottom:14px;max-width:860px"><span><b>You are viewing the shareable offline build.</b> The same application code runs inside your browser instead of on a server. Rows marked "Real (Gemini)" use the offline rules engine and stored sample results here; voices that were generated with Gemini TTS are included as audio files.</span></div>` : ''}
     <div class="tablewrap"><table class="t"><thead><tr><th>Part</th><th>How it works here</th><th>Status</th></tr></thead><tbody>
       ${row('Trigger', 'Deterministic rules: new payee + amount, amount vs 90-day max, payee account age, session signals, payee-name words.', R)}
       ${row('Interview flow', 'Code picks the next question (purpose → coached follow-up → who/how → the one true thing → secrecy → evidence). Gemini phrases it in the customer\'s language when a key is set and sound is off; with sound on, Ruko speaks fixed questions so every line has a cached Gemini voice.', G)}

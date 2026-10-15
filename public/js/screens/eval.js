@@ -1,5 +1,5 @@
 import { get, post } from '../api.js';
-import { $, esc, sleep, download, toast, outcomePill } from '../ui.js';
+import { $, esc, sleep, download, toast, outcomePill, pageHead } from '../ui.js';
 import { app } from '../main.js';
 import { specs, pngOf } from '../evidence-render.js';
 
@@ -8,10 +8,10 @@ const runs = [];
 
 export async function render(el) {
   el.innerHTML = `
-    <div class="row between" style="margin-bottom:12px"><div><h2 style="margin:0">Evaluation</h2><div class="small muted">The one table for the deck. Interview: 20 scam + 20 legitimate-but-unusual transfers + 4 red-team cases. Extraction: 30 synthetic receipts in Hindi, Tamil and English.</div></div></div>
+    ${pageHead({ eyebrow: 'For judges', title: 'Evaluation', desc: 'How well Ruko decides. Interview: 20 scams, 20 legitimate but unusual transfers and 4 red-team cases. Extraction: 30 synthetic receipts in Hindi, Tamil and English.' })}
     <div class="card"><div class="card-head"><h3 style="margin:0">Interview agent</h3>
-      <div class="row"><button class="btn primary" id="runOff" type="button">Run (offline rules)</button><button class="btn" id="runGem" type="button" ${app.config.aiMode === 'gemini' && !app.config.static ? '' : `disabled title="${app.config.static ? 'Disabled in the shared demo to protect viewers\' usage' : 'Needs GEMINI_API_KEY'}"`}>Run with Gemini (sample of 12)</button></div></div>
-      <div id="iv"><p class="muted small">Not run yet.</p></div></div>
+      <div class="row"><button class="btn primary" id="runOff" type="button">Re-run (offline rules)</button><button class="btn" id="runGem" type="button" ${app.config.aiMode === 'gemini' && !app.config.static ? '' : `disabled title="${app.config.static ? 'Disabled in the shared demo to protect viewers\' usage' : 'Needs GEMINI_API_KEY'}"`}>Run with Gemini (sample of 12)</button></div></div>
+      <div id="iv"><p class="muted small">Running the offline evaluation…</p></div></div>
     <div class="card" style="margin-top:16px"><div class="card-head"><h3 style="margin:0">Evidence extraction</h3><button class="btn" id="runEx" type="button" ${app.config.aiMode === 'gemini' && !app.config.static ? '' : 'disabled'}>Run extraction eval (30 items)</button></div>
       <div id="ex">${app.config.aiMode === 'gemini' ? '<p class="muted small">Not run yet. Each item is rendered in your browser and sent to Gemini; results are scored against ground truth.</p>' : '<div class="callout warn small">Needs a Gemini key. In offline mode the reader returns the stored ground truth for sample files, so scoring it would only measure itself. We do not show a number we did not earn.</div>'}</div></div>`;
 
@@ -38,6 +38,8 @@ export async function render(el) {
   };
   const runIv = async (useGemini) => { $('#iv', el).innerHTML = `<p class="muted">Running ${useGemini ? 'with Gemini (this takes a minute)' : ''}…</p>`; try { drawIv(await post('/eval/interview', { useGemini, limit: useGemini ? 12 : 0 })); } catch (e) { $('#iv', el).innerHTML = `<div class="callout bad">${esc(e.message)}</div>`; } };
   $('#runOff', el).addEventListener('click', () => runIv(false));
+  // Offline rules take well under a second: show the numbers on arrival instead of an empty card.
+  runIv(false);
   $('#runGem', el).addEventListener('click', () => runIv(true));
 
   $('#runEx', el).addEventListener('click', async () => {

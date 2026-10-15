@@ -1,5 +1,5 @@
 import { get, post } from '../api.js';
-import { esc, inr, dt, outcomePill, toast } from '../ui.js';
+import { esc, dt, statusPill, toast } from '../ui.js';
 import { t, state, setLang } from '../i18n.js';
 import { go, app, refreshConfig } from '../main.js';
 import { startTour } from '../tour.js';
@@ -42,89 +42,83 @@ const SCRIPT = {
 export async function render(el) {
   const [scns, cases] = await Promise.all([get('/scenarios'), get('/cases')]);
   const L = state.lang, hi = L === 'hi';
-  const tone = { A: 'var(--bad)', B: 'var(--ok)', C: 'var(--info)' };
   const tag = { A: hi ? 'डिजिटल अरेस्ट स्कैम' : 'Digital-arrest scam', B: hi ? 'असली पेमेंट' : 'Legitimate payment', C: hi ? 'गलत फ़्रीज़ खाता' : 'Wrongly frozen account' };
   const tagCls = { A: 'bad', B: 'ok', C: 'info' };
-  const expect = {
-    A: [hi ? 'रोक + बेटे को सूचना, फिर ओवरराइड और केस फ़ाइल' : 'Hold + son notified, then override and case file', 'stop'],
-    B: [hi ? 'पेमेंट आगे बढ़े। कभी रोका न जाए।' : 'Payment goes through. Never held.', 'shieldCheck'],
-    C: [hi ? '₹6.4 लाख के फ़्रीज़ को ₹9,000 के lien तक सीमित करने की माँग' : 'Limit a ₹6.4 lakh freeze to a ₹9,000 lien', 'snow'],
+  const story = {
+    A: hi ? 'एक "अधिकारी" वीडियो कॉल पर है और ₹18 लाख "RBI Verification Cell" को भेजने को कह रहा है।' : 'An "officer" on a video call tells her to send ₹18 lakh to an "RBI Verification Cell".',
+    B: hi ? 'नए बिल्डर को ₹15 लाख की डाउन पेमेंट। बड़ी और नई, पर असली।' : 'A ₹15 lakh down payment to a new builder. Large and unusual, but real.',
+    C: hi ? '₹9,000 की एक संदिग्ध रकम आने पर पूरा ₹6.4 लाख का खाता फ़्रीज़ हो गया।' : 'One ₹9,000 credit he did not know about froze his whole ₹6.4 lakh account.',
   };
+  const expect = {
+    A: [hi ? 'पेमेंट रुकता है, बेटे को सूचना जाती है' : 'Payment held, her son is told', 'stop'],
+    B: [hi ? 'पेमेंट बिना रुके जाता है' : 'Payment goes through, never held', 'shieldCheck'],
+    C: [hi ? 'फ़्रीज़ को ₹9,000 तक सीमित करने की अर्ज़ी' : 'Asks to limit the freeze to ₹9,000', 'snow'],
+  };
+  const steps = [
+    { ic: 'stop', n: hi ? 'रोको' : 'Stop', h: hi ? 'पैसा जाने से पहले' : 'Before the money leaves', d: hi ? 'नए payee को बड़ा ट्रांसफ़र दबाव में लगे, तो Ruko ग्राहक से हिंदी या English में दो-तीन सवाल पूछता है। जवाब रटे हुए लगें तो पेमेंट 24 घंटे रोकता है और भरोसेमंद व्यक्ति को बताता है।' : 'When a big transfer to a new payee looks coerced, Ruko asks the customer two or three questions in Hindi or English. If the answers sound coached, it holds the payment for 24 hours and tells someone they trust.', fit: hi ? 'सुप्रीम कोर्ट के कहे RBI debit-hold SOP जैसा (4 अगस्त 2026)' : 'In line with the RBI debit-hold SOP the Supreme Court ordered (4 Aug 2026)' },
+    { ic: 'snow', n: hi ? 'फ़्रीज़' : 'Freeze', h: hi ? 'अगर फिर भी भेज दें' : 'If they send it anyway', d: hi ? 'सब कुछ पहले से दर्ज है, तो 1930 की शिकायत गोल्डन आवर में तैयार हो जाती है। पीड़ित को कहानी दोबारा नहीं सुनानी पड़ती।' : 'Everything is already captured, so the 1930 complaint is drafted inside the golden hour. The victim never has to retell the story.', fit: hi ? '1930 / CFCFRMS के लिए तैयार' : 'Ready for 1930 / CFCFRMS' },
+    { ic: 'undo', n: hi ? 'वापसी' : 'Return', h: hi ? 'पैसा वापस पाना' : 'Getting the money back', d: hi ? 'स्क्रीनशॉट से cited केस फ़ाइल बनती है: बैंक डिस्प्यूट, साइबर-सेल annexure और रिलीज़ के कागज़। हर रकम एक पक्के तथ्य से जुड़ी।' : 'Screenshots become a cited case file: bank dispute, cyber-cell annexure and release papers, with every amount traced to a confirmed fact.', fit: hi ? 'MHA के Money Restoration और Grievance मॉड्यूल के लिए' : "Built for MHA's Money Restoration and Grievance modules" },
+  ];
 
   el.innerHTML = `
   <section class="hero">
     <div>
       <div class="eyebrow">${t('hub_eyebrow')}</div>
       <h1>${hi ? 'पेमेंट के <em>पल</em> पर स्कैम रोको।' : 'Stop the scam at the <em>moment</em> of payment.'}</h1>
-      <p class="pitch">${t('hub_pitch')}</p>
+      <p class="pitch">${hi ? 'जब कोई बड़ा ट्रांसफ़र दबाव में लगे, Ruko पैसा जाने से पहले ग्राहक से बात करता है। और अगर पैसा फिर भी चला जाए, तो उसे वापस पाने की केस फ़ाइल पहले से तैयार रहती है।' : 'When a big transfer looks coerced, Ruko talks to the customer before the money leaves. If it still goes, the case file to get it back is already built.'}</p>
       <div class="hero-cta">
-        <button class="btn primary lg" id="judge" type="button">${icon('play')}${hi ? 'जज डेमो · 3 मिनट' : 'Judge demo · 3 min'}</button>
-        <button class="btn lg" id="tour2" type="button">${icon('sparkles')}${hi ? 'गाइडेड टूर (Hinglish)' : 'Guided tour (Hinglish)'}</button>
+        <button class="btn primary lg" id="judge" type="button">${icon('play')}${hi ? '3 मिनट का डेमो देखें' : 'Watch the 3-minute demo'}</button>
+        <button class="btn lg" id="try" type="button">${hi ? 'खुद आज़माएँ' : 'Try a scenario'}${icon('arrowRight', { size: 16 })}</button>
       </div>
       <div class="trust-row">
-        <span>${icon('cpu')}${hi ? 'LLM पढ़ता है, कोड फ़ैसला करता है' : 'LLM extracts, code decides'}</span>
-        <span>${icon('fingerprint')}${hi ? 'हर तथ्य अपने सबूत से जुड़ा' : 'Every fact cited to its pixel'}</span>
+        <span>${icon('cpu')}${hi ? 'AI पढ़ता है, कोड फ़ैसला करता है' : 'AI reads, code decides'}</span>
+        <span>${icon('fingerprint')}${hi ? 'हर तथ्य अपने सबूत से जुड़ा' : 'Every fact cited to its source'}</span>
         <span>${icon('languages')}${hi ? 'हिंदी और English' : 'Hindi and English'}</span>
       </div>
     </div>
     <div class="console" aria-label="${hi ? 'लाइव इंटरवेंशन का नमूना' : 'Sample live intervention'}">
-      <div class="console-head"><span>ruko · intervention · RTGS ₹18,00,000</span><span class="live"><i></i>${hi ? 'लाइव' : 'live'}</span></div>
+      <div class="console-head"><span>${hi ? 'Ruko · ₹18,00,000 का RTGS' : 'Ruko · RTGS ₹18,00,000'}</span><span class="live"><i></i>${hi ? 'लाइव' : 'live'}</span></div>
       <div class="console-body" id="cbody" aria-live="off"></div>
-      <div class="console-foot"><span class="tiny muted" style="font-family:var(--mono)">${hi ? 'जोखिम' : 'risk'}</span><div class="bar"><i id="cbar"></i></div><span class="score" id="cscore">0</span></div>
+      <div class="console-foot"><span class="tiny muted">${hi ? 'जोखिम' : 'Risk'}</span><div class="bar"><i id="cbar"></i></div><span class="score" id="cscore">0</span></div>
     </div>
   </section>
 
-  <section class="stats-band stagger" aria-label="${hi ? 'समस्या का आकार' : 'Scale of the problem'}">
-    <div style="--i:0"><div class="num">₹22,495 cr</div><div class="lbl">${hi ? '2025 में साइबर फ़्रॉड का रिपोर्ट किया गया नुकसान (24 लाख शिकायतें)' : 'reported lost to financial cyber fraud in 2025, across 24 lakh complaints'}</div></div>
-    <div style="--i:1"><div class="num">1.23 lakh</div><div class="lbl">${hi ? 'डिजिटल अरेस्ट शिकायतें 2024 में, ₹1,935 cr का नुकसान' : 'digital-arrest complaints in 2024, ₹1,935 cr lost'}</div></div>
-    <div style="--i:2"><div class="num">₹8,189 cr</div><div class="lbl">${hi ? '1930 से रोका गया (2021–2025), जबकि ₹55,649 cr रिपोर्ट हुआ' : 'held by 1930 / CFCFRMS, 2021–2025, of ₹55,649 cr reported'}</div></div>
-    <div style="--i:3"><div class="num">₹18 cr</div><div class="lbl">${hi ? 'Money Restoration Module से अब तक वापस (36,290 केस)' : 'returned so far through the Money Restoration Module, 36,290 cases'}</div></div>
-  </section>
-  <p class="tiny muted" style="margin-top:8px">${hi ? 'स्रोत' : 'Sources'}: MHA, Rajya Sabha USQ 1341 (11 Feb 2026) · MHA, Rajya Sabha reply (12 Mar 2025) · Supreme Court, <i>In Re: Victims of Digital Arrest</i>, 2026 SCC OnLine SC 1532 (4 Aug 2026). ${hi ? 'रिपोर्ट की गई रकम शिकायतकर्ताओं की बताई हुई है, जाँची हुई नहीं।' : 'Reported amounts are what complainants state, not verified losses.'}</p>
-
-  <div class="section-title"><h2>${hi ? 'एक केस, तीन पल' : 'One case, three moments'}</h2><span class="muted small">${hi ? 'वही Case object पेमेंट से रिफ़ंड तक चलता है' : 'The same Case object travels from payment to refund'}</span></div>
-  <section class="moments" id="moments">
-    <div class="moment"><div class="n">01 · ${hi ? 'पैसा जाने से पहले' : 'Before the money leaves'}</div><div class="node">${icon('stop', { size: 18 })}</div><div class="t">${t('m1')}</div><p class="small muted" style="margin:0">${t('m1d')}</p></div>
-    <div class="moment"><div class="n">02 · ${hi ? 'अगर ओवरराइड हो' : 'If they override'}</div><div class="node">${icon('snow', { size: 18 })}</div><div class="t">${t('m2')}</div><p class="small muted" style="margin:0">${t('m2d')}</p></div>
-    <div class="moment"><div class="n">03 · ${hi ? 'फ़्रीज़ के बाद' : 'After the freeze'}</div><div class="node">${icon('undo', { size: 18 })}</div><div class="t">${t('m3')}</div><p class="small muted" style="margin:0">${t('m3d')}</p></div>
+  <section id="moments" aria-labelledby="how-h">
+    <div class="section-title"><h2 id="how-h">${hi ? 'Ruko कैसे काम करता है' : 'How Ruko works'}</h2><span class="muted small">${hi ? 'एक ही केस, पेमेंट से रिफ़ंड तक' : 'One case, from payment to refund'}</span></div>
+    <ol class="how stagger">
+      ${steps.map((x, i) => `<li class="how-step" style="--i:${i}"><div class="how-top"><span class="how-ic">${icon(x.ic, { size: 18 })}</span><span class="how-n">${i + 1} · ${x.n}</span></div><h3>${x.h}</h3><p>${x.d}</p><div class="how-fit">${icon('check', { size: 13 })}${x.fit}</div></li>`).join('')}
+    </ol>
   </section>
 
-  <div class="section-title"><h2>${hi ? 'भारत के 2026 ढाँचे में Ruko कहाँ बैठता है' : "Where Ruko fits India's 2026 framework"}</h2><span class="muted small">${hi ? 'जो पहले से है, उसकी जगह नहीं, उसके साथ' : 'Works with what exists, not instead of it'}</span></div>
-  <section class="grid g3 stagger fit">
-    <div class="card" style="--i:0"><div class="eyebrow">${hi ? 'रोको' : 'Stop'}</div><h3 style="margin:6px 0">${hi ? 'पैसा जाने से पहले' : 'Before the money leaves'}</h3><p class="small muted" style="margin:0">${hi ? 'सुप्रीम कोर्ट (4 अगस्त 2026) ने RBI से temporary debit hold और delayed-transaction safeguard का SOP माँगा। Ruko वही hold है, पर ग्राहक से बात करके, सबूत के साथ, और 24 घंटे में इंसानी रास्ते के साथ।' : 'The Supreme Court (4 Aug 2026) asked RBI for a temporary debit hold SOP and a delayed-transaction safeguard. Ruko is that hold, decided by talking to the customer, with cited reasons and a human way out within 24 hours.'}</p></div>
-    <div class="card" style="--i:1"><div class="eyebrow">${hi ? 'फ़्रीज़' : 'Freeze'}</div><h3 style="margin:6px 0">${hi ? 'गोल्डन आवर में शिकायत' : 'A complaint inside the golden hour'}</h3><p class="small muted" style="margin:0">${hi ? '1930 / CFCFRMS तभी पैसा रोक पाता है जब शिकायत जल्दी और पूरी हो। Ruko override से पहले ही सब कुछ दर्ज कर लेता है, तो पीड़ित को कहानी दोबारा नहीं सुनानी पड़ती।' : '1930 / CFCFRMS can only hold money when the complaint is fast and complete. Ruko has already captured everything before the override, so the victim never retells the story.'}</p></div>
-    <div class="card" style="--i:2"><div class="eyebrow">${hi ? 'वापसी' : 'Return'}</div><h3 style="margin:6px 0">${hi ? 'MRM और GRM के लिए तैयार फ़ाइल' : 'A file ready for MRM and GRM'}</h3><p class="small muted" style="margin:0">${hi ? 'MHA का Money Restoration Module (अप्रैल 2026) सिर्फ़ फ़्रीज़ हुआ पैसा लौटाता है, और Grievance Redressal Module गलत फ़्रीज़ के लिए है। ReturnPath दोनों के लिए cited केस फ़ाइल बनाता है; Scenario C वही दूसरा दरवाज़ा है।' : "MHA's Money Restoration Module (April 2026) returns money that is already frozen; the Grievance Redressal Module handles wrongful freezes. ReturnPath builds the cited case file for both; Scenario C is that second door."}</p></div>
-  </section>
-
-  <div class="section-title"><h2>${t('hub_pick')}</h2><span class="muted small">${hi ? 'सब नकली (synthetic) डेटा' : 'All synthetic data'}</span></div>
-  <div class="grid g3 stagger" id="scenarios">
-    ${scns.map((s, i) => `
-      <article class="card hover scn" style="--tone:${tone[s.id]};--i:${i}" data-scn="${s.id}">
-        <div class="row between"><span class="pill ${tagCls[s.id]}">${tag[s.id]}</span><span class="mono muted">${s.id}</span></div>
-        <div class="who">${esc(hi ? s.labelHi : s.label)}</div>
-        <div class="meta"><span>${hi ? 'ग्राहक' : 'Customer'}</span><b>${esc(s.customer.name)}, ${s.customer.age} · ${esc(s.customer.city)}</b>
-          ${s.payment ? `<span>${hi ? 'पेमेंट' : 'Payment'}</span><b>${inr(s.payment.amountINR)} · ${esc(s.payment.rail)}</b><span>Payee</span><b>${esc(s.payment.payeeName)}</b>` : `<span>${hi ? 'फ़्रीज़' : 'Frozen'}</span><b>${inr(s.customer.balanceINR)}</b>`}</div>
-        <div class="expect">${icon(expect[s.id][1], { size: 16 })}<span>${expect[s.id][0]}</span></div>
-        <div class="row" style="margin-top:auto"><button class="btn primary" data-start="${s.id}" type="button">${t('start')}${icon('arrowRight', { size: 16 })}</button></div>
-      </article>`).join('')}
-  </div>
-
-  <div class="grid g2" style="margin-top:var(--s10)">
-    <div class="card">
-      <div class="card-head"><h3>${icon('layers')}${hi ? 'हाल के केस' : 'Recent cases'}</h3><a class="btn sm" href="#/desk">${hi ? 'फ़्रॉड डेस्क' : 'Fraud Desk'}${icon('chevronRight', { size: 14 })}</a></div>
-      ${cases.length ? `<div class="tablewrap"><table class="t"><thead><tr><th>Case</th><th>${hi ? 'ग्राहक' : 'Customer'}</th><th>Outcome</th><th>Stage</th></tr></thead><tbody>
-        ${cases.slice(0, 6).map((c) => `<tr class="click" data-open="${c.id}" data-door="${c.door}" tabindex="0"><td class="mono">${c.id}</td><td>${esc(c.name)}<div class="tiny muted">${dt(c.createdAt)}</div></td><td>${outcomePill(c.outcome, L)}</td><td class="small">${esc(c.stage)}</td></tr>`).join('')}
-      </tbody></table></div>` : `<div class="callout info">${icon('info')}<span>${hi ? 'अभी कोई केस नहीं। ऊपर एक सीन शुरू करें।' : 'No cases yet. Start a scenario above.'}</span></div>`}
+  <section aria-labelledby="pick-h">
+    <div class="section-title"><h2 id="pick-h">${hi ? 'एक सीन चुनकर आज़माएँ' : 'Try it: pick a scenario'}</h2><span class="muted small">${hi ? 'सभी लोग और पैसे नकली (synthetic) हैं' : 'All people and money are synthetic'}</span></div>
+    <div class="grid g3 stagger" id="scenarios">
+      ${scns.map((s, i) => `
+        <article class="card scn" style="--i:${i}" data-scn="${s.id}">
+          <span class="pill ${tagCls[s.id]}">${tag[s.id]}</span>
+          <h3>${esc(s.customer.name)}, ${s.customer.age} <span class="muted">· ${esc(s.customer.city)}</span></h3>
+          <p class="scn-story">${story[s.id]}</p>
+          <div class="scn-expect">${icon(expect[s.id][1], { size: 16 })}<span>${hi ? 'नतीजा' : 'Expected'}: <b>${expect[s.id][0]}</b></span></div>
+          <button class="btn ${s.id === 'A' ? 'primary' : ''} block" data-start="${s.id}" type="button">${hi ? `सीन ${s.id} शुरू करें` : `Start scenario ${s.id}`}${icon('arrowRight', { size: 16 })}</button>
+        </article>`).join('')}
     </div>
-    <div class="card">
-      <div class="card-head"><h3>${icon('cpu')}${hi ? 'डेमो कंट्रोल' : 'Demo controls'}</h3><span class="pill ${app.config.aiMode === 'gemini' ? 'ok' : 'warn'}">${app.config.aiMode === 'gemini' ? 'Gemini' : 'Offline'}</span></div>
+  </section>
+
+  ${cases.length ? `<section class="card recent" aria-labelledby="rec-h">
+    <div class="card-head"><h3 id="rec-h">${icon('layers')}${hi ? 'आपके हाल के केस' : 'Your recent cases'}</h3><a class="btn sm" href="#/desk">${hi ? 'सब फ़्रॉड डेस्क में' : 'All cases in Fraud Desk'}${icon('chevronRight', { size: 14 })}</a></div>
+    <ul class="recent-list">${cases.slice(0, 5).map((c) => `<li class="click" data-open="${c.id}" data-door="${c.door}" tabindex="0" role="link"><span class="who"><b>${esc(c.name)}</b><span class="tiny muted">${c.id} · ${dt(c.createdAt)}</span></span>${statusPill(c, L)}<span class="go">${icon('chevronRight', { size: 16 })}</span></li>`).join('')}</ul>
+  </section>` : ''}
+
+  <details class="dev-settings">
+    <summary>${icon('cpu', { size: 16 })}${hi ? 'डेमो सेटिंग्स' : 'Demo settings'}<span class="pill ${app.config.aiMode === 'gemini' ? 'ok' : 'warn'}">${app.config.aiMode === 'gemini' ? 'Gemini live' : 'Offline rules'}</span></summary>
+    <div class="dev-body">
       <p class="small muted">${app.config.aiMode === 'gemini' ? `${hi ? 'मॉडल चेन' : 'Model chain'}: <span class="mono">${esc(app.config.models.chainFast || app.config.models.fast)}</span>` : (hi ? 'कोई API key नहीं: नियम और cached जवाब।' : 'No API key: rules and cached responses.')}</p>
-      ${app.config.static && app.config.aiMode === 'gemini' ? `<div class="callout ok" style="margin-bottom:10px">${icon('sparkles')}<span>${hi ? 'लाइव Gemini सीधे आपके ब्राउज़र से चलता है (कोई सर्वर नहीं)। आपके केस सिर्फ़ इसी ब्राउज़र में रहते हैं।' : 'Live Gemini runs straight from your browser (no server). Your cases stay in this browser only.'}</span></div>` : app.config.static ? `<div class="callout info" style="margin-bottom:10px">${icon('info')}<span>${hi ? 'यह शेयर करने लायक ऑफ़लाइन डेमो है: पूरा प्लेटफ़ॉर्म आपके ब्राउज़र में चलता है। AI वाला हिस्सा ऑफ़लाइन नियमों से चलता है (वही लॉजिक जो टेस्ट में 44/44 सही है)। लाइव Gemini वाला वर्ज़न होस्टेड ऐप पर चलता है। आपका डेटा सिर्फ़ इसी ब्राउज़र में रहता है।' : 'This is a shareable offline demo: the whole platform runs in your browser. The AI steps use the offline rules engine (the same logic that scores 44/44 in the tests). Live Gemini runs in the hosted app (Cloud Run). Your data stays in this browser only.'}</span></div>` : ''}
+      ${app.config.static ? `<p class="small muted">${app.config.aiMode === 'gemini' ? (hi ? 'Gemini सीधे आपके ब्राउज़र से चलता है। आपके केस सिर्फ़ इसी ब्राउज़र में रहते हैं।' : 'Gemini runs straight from your browser. Your cases stay in this browser only.') : (hi ? 'यह ऑफ़लाइन डेमो है: पूरा प्लेटफ़ॉर्म आपके ब्राउज़र में चलता है।' : 'Offline demo: the whole platform runs in your browser with the rules engine.')}</p>` : ''}
       <label class="switch" ${app.config.static ? 'hidden' : ''}><input type="checkbox" id="simFail" ${app.config.simulateFailure ? 'checked' : ''}> ${hi ? 'मॉडल फ़ेल होने का सिमुलेशन (fallback साबित करने के लिए)' : 'Simulate model failure (proves the fallbacks)'}</label>
-      ${app.config.static ? '' : app.config.hasKey ? `<label class="switch"><input type="checkbox" id="forceOff" ${app.config.forceOffline ? 'checked' : ''}> ${hi ? 'ऑफ़लाइन नियम मोड पर ज़बरदस्ती चलाएँ' : 'Force offline rules mode'}</label>` : `<p class="small">${hi ? 'लाइव Gemini के लिए' : 'For live Gemini, put'} <span class="mono">GEMINI_API_KEY=…</span> ${hi ? 'को' : 'in'} <span class="mono">ruko-app/.env</span>${hi ? ' में डालें और सर्वर रीस्टार्ट करें।' : ' and restart the server.'}</p>`}
-      <div class="row" style="margin-top:12px"><button class="btn sm danger" id="reset" type="button">${icon('trash', { size: 15 })}${hi ? 'डेमो डेटा साफ़ करें' : 'Reset demo data'}</button></div>
+      ${!app.config.static && app.config.hasKey ? `<label class="switch"><input type="checkbox" id="forceOff" ${app.config.forceOffline ? 'checked' : ''}> ${hi ? 'ऑफ़लाइन नियम मोड पर चलाएँ' : 'Force offline rules mode'}</label>` : ''}
+      <button class="btn sm danger" id="reset" type="button">${icon('trash', { size: 15 })}${hi ? 'डेमो डेटा साफ़ करें' : 'Reset demo data'}</button>
     </div>
-  </div>`;
+  </details>`;
 
   // console loop
   const body = el.querySelector('#cbody'), bar = el.querySelector('#cbar'), sc = el.querySelector('#cscore');
@@ -132,7 +126,7 @@ export async function render(el) {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const play = () => {
     body.innerHTML = ''; bar.style.width = '0'; sc.textContent = '0';
-    let at = 300;
+    let at = 120;
     for (const [who, text, score] of SCRIPT[L] || SCRIPT.en) {
       timers.push(setTimeout(() => {
         const d = document.createElement('div');
@@ -143,7 +137,7 @@ export async function render(el) {
         while (body.children.length > 6) body.firstElementChild.remove();
         if (score != null) { bar.style.width = `${Math.min(100, (score / 25) * 100)}%`; sc.textContent = score; sc.style.color = score >= 9 ? 'var(--bad)' : score >= 5 ? 'var(--warn)' : 'var(--ok)'; }
       }, reduced ? 0 : at));
-      at += who === 'cust' ? 1500 : who === 'sig' ? 1100 : 1900;
+      at += body.children.length < 1 && at < 400 ? 500 : who === 'cust' ? 1500 : who === 'sig' ? 1100 : 1900;
     }
     if (!reduced) timers.push(setTimeout(play, at + 4000));
   };
@@ -155,8 +149,8 @@ export async function render(el) {
     r.addEventListener('click', open); r.addEventListener('keydown', (e) => { if (e.key === 'Enter') open(); });
   });
   el.querySelector('#judge').addEventListener('click', () => startTour({ auto: true }));
-  el.querySelector('#tour2').addEventListener('click', () => startTour());
-  el.querySelector('#simFail').addEventListener('change', async (e) => { await post('/settings', { simulateFailure: e.target.checked }); await refreshConfig(); toast(e.target.checked ? 'Model calls will now fail; cached fallbacks take over' : 'Model failure simulation off'); });
+  el.querySelector('#try').addEventListener('click', () => { const t = el.querySelector('#scenarios'); t.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); t.querySelector('button')?.focus({ preventScroll: true }); });
+  el.querySelector('#simFail')?.addEventListener('change', async (e) => { await post('/settings', { simulateFailure: e.target.checked }); await refreshConfig(); toast(e.target.checked ? 'Model calls will now fail; cached fallbacks take over' : 'Model failure simulation off'); });
   el.querySelector('#forceOff')?.addEventListener('change', async (e) => { await post('/settings', { forceOffline: e.target.checked }); await refreshConfig(); });
   el.querySelector('#reset').addEventListener('click', async () => { await post('/reset'); localStorage.removeItem('ruko_case'); toast(hi ? 'डेमो डेटा साफ़' : 'Demo data cleared'); go('#/'); });
   return () => timers.forEach(clearTimeout);

@@ -1,6 +1,6 @@
 import { get, post, del } from '../api.js';
 import { dictate } from '../dictate.js';
-import { $, $$, esc, inr, sleep, toast, download, fileToDataUrl, mocked } from '../ui.js';
+import { $, $$, esc, inr, sleep, toast, download, fileToDataUrl, mocked, emptyState } from '../ui.js';
 import { t, state } from '../i18n.js';
 import { go } from '../main.js';
 import { specs, evidencePayload, pngOf } from '../evidence-render.js';
@@ -16,7 +16,14 @@ export async function render(el, [caseId, stepS]) {
   caseId = caseId || localStorage.getItem('ruko_case');
   let c = caseId ? await get(`/cases/${caseId}`).catch(() => null) : null;
   if (!c) {
-    el.innerHTML = `<div class="card" style="max-width:680px"><h2>ReturnPath</h2><p class="muted">${state.lang === 'hi' ? 'पैसा चला गया या खाता फ़्रीज़ है? एक सीन से शुरू करें।' : 'Money already left, or your account is frozen? Start from a scenario.'}</p><div class="row"><button class="btn primary" data-s="C" type="button">${t('frozen_title')}</button><button class="btn" data-s="A" type="button">Scenario A (start at the bank)</button></div></div>`;
+    const hi = state.lang === 'hi';
+    el.innerHTML = emptyState({
+      ic: 'undo',
+      title: hi ? 'पैसा वापस पाएँ, या खाता खुलवाएँ' : 'Get your money back, or your account unfrozen',
+      body: hi ? 'अपनी बात अपने शब्दों में बताइए और स्क्रीनशॉट दीजिए। ReturnPath हर तथ्य उसके सबूत से जोड़कर बैंक, साइबर सेल और कोर्ट के लिए कागज़ बनाता है।' : 'Tell it in your own words and add your screenshots. ReturnPath ties every fact to its evidence and drafts the papers for the bank, the cyber cell and the court.',
+      actions: `<button class="btn primary lg" data-s="C" type="button">${t('frozen_title')}${icon('arrowRight', { size: 16 })}</button><button class="btn lg" data-s="A" type="button">${hi ? 'पैसा चला गया (सीन A)' : 'My money already left (Scenario A)'}</button>`,
+      steps: hi ? ['क्या हुआ', 'सबूत', 'तथ्य जाँचें', 'केस फ़ाइल'] : ['What happened', 'Your evidence', 'Check the facts', 'Your case file'],
+    });
     el.querySelectorAll('[data-s]').forEach((b) => b.addEventListener('click', () => startScenario(b.dataset.s)));
     return;
   }
